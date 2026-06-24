@@ -3,6 +3,20 @@ import XCTest
 @testable import ScanPhotoEditor
 
 final class ImportAndManifestTests: XCTestCase {
+    func testGeometryCanvasLayoutContainsZoomedImageAtOneHundredThirtyPercent() {
+        let layout = GeometryCanvasLayout(
+            imageSize: CGSize(width: 1002, height: 721),
+            viewportSize: CGSize(width: 900, height: 330),
+            zoom: 1.3
+        )
+
+        XCTAssertGreaterThan(layout.contentSize.height, 330)
+        XCTAssertLessThanOrEqual(layout.imageRect.maxX, layout.contentSize.width)
+        XCTAssertLessThanOrEqual(layout.imageRect.maxY, layout.contentSize.height)
+        XCTAssertGreaterThanOrEqual(layout.imageRect.minX, 0)
+        XCTAssertGreaterThanOrEqual(layout.imageRect.minY, 0)
+    }
+
     func testRecursiveDiscoverySkipsHiddenUnsupportedAndSymlinkFiles() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

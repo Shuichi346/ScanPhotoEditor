@@ -11,3 +11,4 @@
 - Preserve undoability for user-visible geometry, creation, deletion, and ordering changes.
 - Use preview-sized images while editing and decode full resolution only for export.
 - SwiftUI views that render values from `PhotoProjectDocument.manifest` must observe the document directly; observing only `ProjectEditingStore` does not propagate the document's Combine updates.
+- In `GeometryCanvasView`, derive the rendered image rectangle and scrollable content size from the same zoomed canvas dimensions so the image never extends beyond the scroll bounds.

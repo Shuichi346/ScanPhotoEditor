@@ -2,6 +2,7 @@
 
 ## 2026-06-24
 
+- The source canvas applied zoom independently to its minimum frame and rendered image, allowing the image to extend beyond the measured scroll bounds. `GeometryCanvasLayout` now derives both from one explicit zoomed canvas size.
 - Crop previews updated correctly, but source-canvas guidelines stayed stale because the canvas observed the editing store while geometry lived in the document's published manifest. `GeometryCanvasView` now observes `PhotoProjectDocument` directly.
 - The Xcode build and unit tests passed after the fix. The existing UI test runner exited before establishing its test connection.
 - The application uses a package-based `ReferenceFileDocument`.

@@ -1,6 +1,49 @@
 import AppKit
 import SwiftUI
 
+struct GeometryCanvasLayout: Equatable {
+    static let minimumCanvasSize = CGSize(width: 600, height: 500)
+    static let contentPadding: CGFloat = 28
+
+    let contentSize: CGSize
+    let imageRect: CGRect
+
+    init(imageSize: CGSize, viewportSize: CGSize, zoom: CGFloat) {
+        let availableViewport = CGSize(
+            width: max(viewportSize.width - Self.contentPadding * 2, 1),
+            height: max(viewportSize.height - Self.contentPadding * 2, 1)
+        )
+        let baseCanvasSize = CGSize(
+            width: max(availableViewport.width, Self.minimumCanvasSize.width),
+            height: max(availableViewport.height, Self.minimumCanvasSize.height)
+        )
+        let effectiveZoom = max(zoom, 0.01)
+        let zoomedCanvasSize = CGSize(
+            width: baseCanvasSize.width * effectiveZoom,
+            height: baseCanvasSize.height * effectiveZoom
+        )
+        contentSize = CGSize(
+            width: max(baseCanvasSize.width, zoomedCanvasSize.width),
+            height: max(baseCanvasSize.height, zoomedCanvasSize.height)
+        )
+
+        let scale = min(
+            zoomedCanvasSize.width / max(imageSize.width, 1),
+            zoomedCanvasSize.height / max(imageSize.height, 1)
+        )
+        let renderedImageSize = CGSize(
+            width: imageSize.width * scale,
+            height: imageSize.height * scale
+        )
+        imageRect = CGRect(
+            x: (contentSize.width - renderedImageSize.width) / 2,
+            y: (contentSize.height - renderedImageSize.height) / 2,
+            width: renderedImageSize.width,
+            height: renderedImageSize.height
+        )
+    }
+}
+
 struct GeometryCanvasView: View {
     let store: ProjectEditingStore
     let undoManager: UndoManager?
@@ -34,42 +77,39 @@ struct GeometryCanvasView: View {
             .padding(.vertical, 10)
             .background(.bar)
 
-            ScrollView([.horizontal, .vertical]) {
-                GeometryReader { proxy in
+            GeometryReader { viewport in
+                ScrollView([.horizontal, .vertical]) {
                     if let image = store.sourcePreview {
-                        let imageRect = aspectFitRect(
+                        let layout = GeometryCanvasLayout(
                             imageSize: CGSize(width: image.width, height: image.height),
-                            containerSize: proxy.size,
+                            viewportSize: viewport.size,
                             zoom: store.zoom
                         )
                         ZStack(alignment: .topLeading) {
                             Image(decorative: image, scale: 1)
                                 .resizable()
-                                .frame(width: imageRect.width, height: imageRect.height)
-                                .position(x: imageRect.midX, y: imageRect.midY)
+                                .frame(width: layout.imageRect.width, height: layout.imageRect.height)
+                                .position(x: layout.imageRect.midX, y: layout.imageRect.midY)
 
                             Canvas { context, _ in
                                 drawRegions(
                                     context: context,
                                     source: selectedSource,
-                                    imageRect: imageRect
+                                    imageRect: layout.imageRect
                                 )
                             }
                             .allowsHitTesting(false)
 
                             if let region = selectedRegion {
-                                handles(for: region.quadrilateral, in: imageRect)
+                                handles(for: region.quadrilateral, in: layout.imageRect)
                             }
                         }
+                        .frame(width: layout.contentSize.width, height: layout.contentSize.height)
+                        .padding(GeometryCanvasLayout.contentPadding)
                     }
                 }
-                .frame(
-                    minWidth: 600 * store.zoom,
-                    minHeight: 500 * store.zoom
-                )
-                .padding(28)
+                .background(Color(nsColor: .controlBackgroundColor))
             }
-            .background(Color(nsColor: .controlBackgroundColor))
         }
     }
 
@@ -249,25 +289,6 @@ struct GeometryCanvasView: View {
             ))
             context.stroke(horizontal, with: .color(.mint.opacity(0.55)), lineWidth: 1)
         }
-    }
-
-    private func aspectFitRect(
-        imageSize: CGSize,
-        containerSize: CGSize,
-        zoom: CGFloat
-    ) -> CGRect {
-        let available = CGSize(
-            width: max(containerSize.width, 1),
-            height: max(containerSize.height, 1)
-        )
-        let scale = min(available.width / imageSize.width, available.height / imageSize.height) * zoom
-        let size = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
-        return CGRect(
-            x: max(0, (available.width - size.width) / 2),
-            y: max(0, (available.height - size.height) / 2),
-            width: size.width,
-            height: size.height
-        )
     }
 
     private func normalizedPoint(_ point: CGPoint, in rect: CGRect) -> NormalizedPoint {
