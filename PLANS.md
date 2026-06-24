@@ -47,12 +47,24 @@ All processing is non-destructive and geometry-only. The app must never apply wh
 - AppKit only for save/destination panels and narrow window integration.
 - Swift concurrency with a processing limit of two source images at once.
 - XCTest and XCUITest.
-- XcodeGen 2.45.4 as a development-only project generator; no third-party runtime dependencies.
+- `ScanPhotoEditor.xcodeproj` is the primary project format for development, testing, signing, archiving, and release builds.
+- XcodeGen 2.45.4 is a development-only generator for `ScanPhotoEditor.xcodeproj`; no third-party runtime dependencies.
+- Do not use a SwiftPM-only application layout. Add `Package.swift` only if a dependency library later requires a Swift package manifest consumed by the Xcode project.
+- Open `ScanPhotoEditor.xcodeproj` in Xcode before invoking Swift/Xcode tasks so the `xcode` MCP server operates on the correct project.
+- Prefer the `xcode` MCP server together with the Build macOS Apps plugin for project inspection, builds, tests, diagnostics, symbols, and runtime debugging.
+- Fall back to `xcodebuild` only when the project is not open in Xcode or the MCP capability is unavailable. Release builds must always build the `.xcodeproj` through Xcode rather than `swift build`.
+- After every Swift source or project-setting edit, build through the `xcode` MCP server and report diagnostics before marking the step complete.
 
 Target structure:
 
 ```text
+.gitignore
+README.md
+CHANGELOG.md
+NOTES.md
+AGENTS.md
 project.yml
+ScanPhotoEditor.xcodeproj
 ScanPhotoEditor/
   App/
   Documents/
@@ -144,9 +156,9 @@ Do not call automatic adjustment APIs or Core Image tone, color, restoration, no
 | Agent | Step Count | Phases Involved |
 |---|---:|---|
 | `devops-agent` | 1 | 1 |
-| `coding-agent` | 14 | 1–5 |
+| `coding-agent` | 15 | 1–5 |
 | `review-agent` | 5 | 1–5 |
-| `documentation-agent` | 1 | 5 |
+| `documentation-agent` | 2 | 1, 5 |
 
 ## Implementation Steps
 
@@ -157,33 +169,44 @@ Do not call automatic adjustment APIs or Core Image tone, color, restoration, no
 - **Agent:** `devops-agent`
 - **Location:** `project.yml`, `script/build_and_run.sh`, `.codex/environments/environment.toml`
 - **Action:** Create the XcodeGen project, app/test targets, sandbox entitlements, Info.plist document declarations, deterministic build script, and Codex Run action.
-- **Details:** Set macOS 26.0, arm64, Swift 6 strict concurrency, `.scanphoto` package UTI, and user-selected read/write entitlement. The run script must support `--debug`, `--logs`, `--telemetry`, and `--verify`.
+- **Details:** Generate `ScanPhotoEditor.xcodeproj` and treat it as the primary project. Set macOS 26.0, arm64, Swift 6.3 strict concurrency, `.scanphoto` package UTI, and user-selected read/write entitlement. Do not create a SwiftPM-only app. The run script must build the Xcode project and support `--debug`, `--logs`, `--telemetry`, and `--verify`; its command-line `xcodebuild` use is a fallback/run-button boundary, not the primary interactive development workflow.
 - **Dependencies:** None
-- **Verification:** Generate the project, build an empty app, run `./script/build_and_run.sh --verify`, and confirm the process exists.
+- **Verification:** Generate `ScanPhotoEditor.xcodeproj`, open it in Xcode, select the app scheme, build through the `xcode` MCP server with no diagnostics, then run `./script/build_and_run.sh --verify` and confirm the process exists. If the MCP capability is unavailable, record that fact and use `xcodebuild -project ScanPhotoEditor.xcodeproj` as the fallback.
 - **Complexity:** Medium
 - **Risk:** Medium because project metadata and document declarations must agree.
 - **Idempotence & Recovery:** Regenerating from `project.yml` must produce the same project. Delete only the generated `.xcodeproj` when regeneration is necessary.
 
-#### Step 1.2 — Define models and geometry primitives
+#### Step 1.2 — Prepare repository hygiene
+
+- **Agent:** `documentation-agent`
+- **Location:** `.gitignore`, `README.md`, `CHANGELOG.md`, `NOTES.md`, `AGENTS.md`
+- **Action:** Create the missing repository-root hygiene files before feature implementation begins.
+- **Details:** `.gitignore` must include `.DS_Store`, `Thumbs.db`, Xcode user data, `DerivedData/`, build outputs, and generated local artifacts without ignoring shared project files. `README.md` describes the app goal and initial build entrypoint. `CHANGELOG.md` starts an `Unreleased` section. `NOTES.md` is a chronological log for issues, solutions, and implementation decisions. Project-level `AGENTS.md` defines Swift 6.3 conventions, `.xcodeproj`-first workflows, mandatory `xcode` MCP builds after edits, geometry-only image processing, prohibited enhancement filters, original-file protection, and recurrence-prevention rules. Add `.gitkeep` only to an intentionally empty directory that must be tracked.
+- **Dependencies:** 1.1
+- **Verification:** Confirm all five files exist at the repository root, `.gitignore` contains both `.DS_Store` and `Thumbs.db`, and `AGENTS.md` contains the Xcode/MCP and no-image-enhancement rules.
+- **Complexity:** Low
+- **Risk:** Low
+
+#### Step 1.3 — Define models and geometry primitives
 
 - **Agent:** `coding-agent`
 - **Location:** `ScanPhotoEditor/Models`, `ScanPhotoEditor/Support/Geometry`
 - **Action:** Implement the manifest, source, region, processing-state, export-option, normalized-point, and quadrilateral types.
 - **Details:** Centralize Vision, Core Image, and SwiftUI coordinate conversions. Validate clockwise ordering, minimum area, clamping, and non-intersection.
-- **Dependencies:** 1.1
-- **Verification:** Unit tests cover all eight EXIF orientations, coordinate round trips, invalid polygons, and corner ordering.
+- **Dependencies:** 1.2
+- **Verification:** Unit tests cover all eight EXIF orientations, coordinate round trips, invalid polygons, and corner ordering. Build and run tests through the `xcode` MCP server and surface all diagnostics.
 - **Complexity:** High
 - **Risk:** High because coordinate errors can silently produce incorrect crops.
 - **Idempotence & Recovery:** Pure value-model work; revert the affected files if tests expose an invalid convention.
 
-#### Step 1.3 — Implement project-package persistence
+#### Step 1.4 — Implement project-package persistence
 
 - **Agent:** `coding-agent`
 - **Location:** `ScanPhotoEditor/Documents/PhotoProjectDocument.swift`
 - **Action:** Implement the reference document, package reader/writer, schema validation, staging of unsaved imports, and thumbnail recovery.
 - **Details:** Write `manifest.json` atomically. Preserve regular-file wrappers for unchanged originals. Missing thumbnails must be regenerated; missing originals must produce a visible project error.
-- **Dependencies:** 1.2
-- **Verification:** Save, close, and reopen a package containing multiple sources and regions; confirm IDs, geometry, ordering, and copied bytes are unchanged.
+- **Dependencies:** 1.3
+- **Verification:** Build through the `xcode` MCP server, then save, close, and reopen a package containing multiple sources and regions; confirm IDs, geometry, ordering, and copied bytes are unchanged.
 - **Complexity:** High
 - **Risk:** High due to large-file persistence and autosave behavior.
 - **Idempotence & Recovery:** Save through a temporary package and replace only after validation. Retain the previous package if writing fails.
@@ -194,8 +217,8 @@ Do not call automatic adjustment APIs or Core Image tone, color, restoration, no
 - **Location:** Entire Phase 1
 - **Action:** Review project generation, model invariants, and package round trips.
 - **Details:** Confirm the phase leaves a buildable app and a valid document format.
-- **Dependencies:** 1.1, 1.2, 1.3
-- **Verification:** Run the arm64 build and model/document tests. Confirm a `.scanphoto` package opens as one Finder document.
+- **Dependencies:** 1.1, 1.2, 1.3, 1.4
+- **Verification:** With `ScanPhotoEditor.xcodeproj` open in Xcode, run the arm64 build and model/document tests through the `xcode` MCP server. Confirm no diagnostics remain, all repository hygiene files exist, and a `.scanphoto` package opens as one Finder document.
 - **Complexity:** Medium
 - **Risk:** Low
 
@@ -413,14 +436,16 @@ Do not call automatic adjustment APIs or Core Image tone, color, restoration, no
 - **Dependencies:** 5.1, 5.2, 5.3
 - **Verification:**
   1. Run XcodeGen.
-  2. Build and test the arm64 app.
-  3. Run `./script/build_and_run.sh --verify`.
-  4. Drop a folder with multiple formats.
-  5. Confirm automatic multi-photo processing.
-  6. Correct geometry manually.
-  7. Save and reopen the project.
-  8. Export all image formats and an ordered PDF.
-  9. Confirm no visual enhancement occurs.
+  2. Open `ScanPhotoEditor.xcodeproj` in Xcode and select the app scheme.
+  3. Build and test the arm64 app through the `xcode` MCP server; surface diagnostics and require zero unresolved errors. Use `xcodebuild` only if the MCP capability is unavailable, and record the fallback.
+  4. Confirm the Release configuration builds through Xcode against `ScanPhotoEditor.xcodeproj`, not `swift build`.
+  5. Run `./script/build_and_run.sh --verify`.
+  6. Drop a folder with multiple formats.
+  7. Confirm automatic multi-photo processing.
+  8. Correct geometry manually.
+  9. Save and reopen the project.
+  10. Export all image formats and an ordered PDF.
+  11. Confirm no visual enhancement occurs.
 - **Complexity:** Medium
 - **Risk:** Low
 
@@ -448,8 +473,9 @@ Do not call automatic adjustment APIs or Core Image tone, color, restoration, no
 ## Progress
 
 - [ ] Step 1.1: Project scaffold
-- [ ] Step 1.2: Models and geometry
-- [ ] Step 1.3: Project persistence
+- [ ] Step 1.2: Repository hygiene
+- [ ] Step 1.3: Models and geometry
+- [ ] Step 1.4: Project persistence
 - [ ] Step 1.G: Foundation gate
 - [ ] Step 2.1: Drag-and-drop import
 - [ ] Step 2.2: Image loading
@@ -485,6 +511,15 @@ Completed entries must include a UTC timestamp.
   **Date:** 2026-06-24
 - **Decision:** Originals are copied into portable project packages.
   **Rationale:** Saved projects must not break when source files move.
+  **Date:** 2026-06-24
+- **Decision:** `ScanPhotoEditor.xcodeproj` is the primary project and release-build format; SwiftPM-only app builds are prohibited.
+  **Rationale:** The Xcode project preserves macOS resources, signing, entitlements, Info.plist wiring, and release configuration.
+  **Date:** 2026-06-24
+- **Decision:** Xcode project work uses the `xcode` MCP server after opening the project in Xcode, with command-line `xcodebuild` reserved for documented fallback and run-script boundaries.
+  **Rationale:** This matches the machine’s Swift/Xcode workflow and ensures diagnostics are surfaced after edits.
+  **Date:** 2026-06-24
+- **Decision:** Repository hygiene files are created in Phase 1 before feature implementation.
+  **Rationale:** The repository needs project-specific conventions, ignore rules, change history, and engineering notes from the start.
   **Date:** 2026-06-24
 
 ## Surprises and Discoveries
