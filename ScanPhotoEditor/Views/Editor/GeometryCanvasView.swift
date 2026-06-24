@@ -137,10 +137,21 @@ struct GeometryCanvasView: View {
     ) -> some View {
         ForEach(QuadrilateralCorner.allCases, id: \.self) { corner in
             let point = quadrilateral.point(for: corner).point(in: imageRect)
-            Circle()
-                .fill(.white)
-                .stroke(.tint, lineWidth: 3)
-                .frame(width: 16, height: 16)
+            ZStack {
+                Circle()
+                    .fill(.clear)
+                    .stroke(.tint, lineWidth: 3)
+
+                Path { path in
+                    path.move(to: CGPoint(x: 3, y: 9))
+                    path.addLine(to: CGPoint(x: 15, y: 9))
+                    path.move(to: CGPoint(x: 9, y: 3))
+                    path.addLine(to: CGPoint(x: 9, y: 15))
+                }
+                .stroke(.red, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+            }
+                .frame(width: 18, height: 18)
+                .contentShape(Circle())
                 .position(point)
                 .gesture(cornerDragGesture(corner: corner, imageRect: imageRect))
                 .accessibilityLabel("\(corner.rawValue) corner")
