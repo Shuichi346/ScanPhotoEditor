@@ -10,6 +10,7 @@
 		015323AAA4D2906677DDBA92 /* ProjectSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2504D1D592359CA8418C8E18 /* ProjectSidebarView.swift */; };
 		13C2C0A0A7EF465990090473 /* GeometryInspectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0EEC7A19E8BE7E574356AD /* GeometryInspectorView.swift */; };
 		1595E21E3CE74B09D35E6EC6 /* ImageImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C207F131258A1FB970595051 /* ImageImportService.swift */; };
+		26A1EAC64A75AF54267C8B25 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 7FF584C99E62FEB4A96B58BE /* AppIcon.icns */; };
 		2CAB467A4F918EE411BDE1C7 /* ScanPhotoEditorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6003534EEA2D2A733604866C /* ScanPhotoEditorApp.swift */; };
 		2E0244B19B781624449B0785 /* ExportSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42093083E435292E12EDE68E /* ExportSheetView.swift */; };
 		3863274865F8382F93702E39 /* ScanPhotoCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67E40DB0FFA999BB9F660AF1 /* ScanPhotoCommands.swift */; };
@@ -64,6 +65,7 @@
 		6003534EEA2D2A733604866C /* ScanPhotoEditorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanPhotoEditorApp.swift; sourceTree = "<group>"; };
 		67E40DB0FFA999BB9F660AF1 /* ScanPhotoCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanPhotoCommands.swift; sourceTree = "<group>"; };
 		73F75C5825D7CF14EF7B14A3 /* ScanPhotoEditorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanPhotoEditorUITests.swift; sourceTree = "<group>"; };
+		7FF584C99E62FEB4A96B58BE /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 		AFA398B240194A7402E33B0C /* ProcessingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingCoordinator.swift; sourceTree = "<group>"; };
 		B057417048DB02AEF6385F34 /* GeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeometryTests.swift; sourceTree = "<group>"; };
 		B87E1998855CADF026EFF3A9 /* ImportAndManifestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportAndManifestTests.swift; sourceTree = "<group>"; };
@@ -175,12 +177,21 @@
 				7FFEAC987D1B98FE27BA521B /* App */,
 				82221F41099BD2A02D6FA179 /* Documents */,
 				C9C015854A47A9D1E0A2A3C9 /* Models */,
+				AB507D5592154468D5FF08B9 /* Resources */,
 				3649FC5D66FA3C62FBEC19B1 /* Services */,
 				C8F22F6112E68C0BEC0B7B67 /* Stores */,
 				FF97793B7804C4525D059BB6 /* Support */,
 				48629580D978E0E53B350E52 /* Views */,
 			);
 			path = ScanPhotoEditor;
+			sourceTree = "<group>";
+		};
+		AB507D5592154468D5FF08B9 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				7FF584C99E62FEB4A96B58BE /* AppIcon.icns */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		BD602E8B1B50B32EF54BB786 /* Export */ = {
@@ -279,6 +290,7 @@
 			buildConfigurationList = DAFAD96EDAA6B488E1BEC889 /* Build configuration list for PBXNativeTarget "ScanPhotoEditor" */;
 			buildPhases = (
 				6625FA8E9525951522131631 /* Sources */,
+				9A3F18F42F11520B2DFED5D6 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -335,6 +347,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9A3F18F42F11520B2DFED5D6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				26A1EAC64A75AF54267C8B25 /* AppIcon.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		6625FA8E9525951522131631 /* Sources */ = {
