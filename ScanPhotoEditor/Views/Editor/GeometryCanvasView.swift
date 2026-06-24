@@ -4,8 +4,15 @@ import SwiftUI
 struct GeometryCanvasView: View {
     let store: ProjectEditingStore
     let undoManager: UndoManager?
+    @ObservedObject private var document: PhotoProjectDocument
     @State private var dragStartQuadrilateral: NormalizedQuadrilateral?
     @State private var dragStartLocation: CGPoint?
+
+    init(store: ProjectEditingStore, undoManager: UndoManager?) {
+        self.store = store
+        self.undoManager = undoManager
+        _document = ObservedObject(wrappedValue: store.document)
+    }
 
     var body: some View {
         @Bindable var store = store
@@ -42,11 +49,15 @@ struct GeometryCanvasView: View {
                                 .position(x: imageRect.midX, y: imageRect.midY)
 
                             Canvas { context, _ in
-                                drawRegions(context: context, imageRect: imageRect)
+                                drawRegions(
+                                    context: context,
+                                    source: selectedSource,
+                                    imageRect: imageRect
+                                )
                             }
                             .allowsHitTesting(false)
 
-                            if let region = store.selectedRegion {
+                            if let region = selectedRegion {
                                 handles(for: region.quadrilateral, in: imageRect)
                             }
                         }
@@ -60,6 +71,23 @@ struct GeometryCanvasView: View {
             }
             .background(Color(nsColor: .controlBackgroundColor))
         }
+    }
+
+    private var selectedSource: SourceAsset? {
+        guard let selectedRegionID = store.selectedRegionID else {
+            return document.manifest.sources.first
+        }
+        return document.manifest.sources.first {
+            $0.regions.contains(where: { $0.id == selectedRegionID })
+        }
+    }
+
+    private var selectedRegion: PhotoRegion? {
+        guard let selectedRegionID = store.selectedRegionID else { return nil }
+        return document.manifest.sources
+            .lazy
+            .flatMap(\.regions)
+            .first(where: { $0.id == selectedRegionID })
     }
 
     @ViewBuilder
@@ -158,8 +186,12 @@ struct GeometryCanvasView: View {
             }
     }
 
-    private func drawRegions(context: GraphicsContext, imageRect: CGRect) {
-        guard let source = store.selectedSource else { return }
+    private func drawRegions(
+        context: GraphicsContext,
+        source: SourceAsset?,
+        imageRect: CGRect
+    ) {
+        guard let source else { return }
         for region in source.regions {
             let points = region.quadrilateral.points.map { $0.point(in: imageRect) }
             var path = Path()
@@ -265,4 +297,3 @@ struct GeometryCanvasView: View {
         )
     }
 }
-

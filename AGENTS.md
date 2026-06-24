@@ -10,4 +10,4 @@
 - Use normalized top-left-origin coordinates ordered top-left, top-right, bottom-right, bottom-left.
 - Preserve undoability for user-visible geometry, creation, deletion, and ordering changes.
 - Use preview-sized images while editing and decode full resolution only for export.
-
+- SwiftUI views that render values from `PhotoProjectDocument.manifest` must observe the document directly; observing only `ProjectEditingStore` does not propagate the document's Combine updates.
