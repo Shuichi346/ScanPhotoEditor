@@ -11,5 +11,7 @@
 - Preserve undoability for user-visible geometry, creation, deletion, and ordering changes.
 - When reordering source images, update both `SourceAsset.importOrder` for sidebar presentation and `ProjectManifest.regionOrder` for export/PDF ordering; preserve the current region order within each source.
 - Use preview-sized images while editing and decode full resolution only for export.
+- Before encoding JPEG thumbnails or exports with ImageIO, render opaque images as RGBX so the encoder does not receive an unnecessary alpha channel.
+- Mark UI tests that use `XCUIApplication` or `XCUIElement` APIs as `@MainActor` under Swift strict concurrency.
 - SwiftUI views that render values from `PhotoProjectDocument.manifest` must observe the document directly; observing only `ProjectEditingStore` does not propagate the document's Combine updates.
 - In `GeometryCanvasView`, derive the rendered image rectangle and scrollable content size from the same zoomed canvas dimensions so the image never extends beyond the scroll bounds.
