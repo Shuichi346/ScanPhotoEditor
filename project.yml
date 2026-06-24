@@ -1,0 +1,79 @@
+name: ScanPhotoEditor
+options:
+  bundleIdPrefix: com.shuichi
+  deploymentTarget:
+    macOS: "26.0"
+  xcodeVersion: "26.5"
+  createIntermediateGroups: true
+settings:
+  base:
+    ARCHS: arm64
+    ONLY_ACTIVE_ARCH: YES
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+targets:
+  ScanPhotoEditor:
+    type: application
+    platform: macOS
+    sources:
+      - path: ScanPhotoEditor
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shuichi.ScanPhotoEditor
+        PRODUCT_NAME: ScanPhotoEditor
+        CODE_SIGN_ENTITLEMENTS: ScanPhotoEditor/Support/ScanPhotoEditor.entitlements
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: ScanPhotoEditor
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.photography
+        INFOPLIST_KEY_NSHumanReadableCopyright: Copyright © 2026 Shuichi
+        INFOPLIST_KEY_UTExportedTypeDeclarations:
+          - UTTypeIdentifier: com.shuichi.scanphoto
+            UTTypeDescription: ScanPhotoEditor Project
+            UTTypeConformsTo:
+              - com.apple.package
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - scanphoto
+        INFOPLIST_KEY_CFBundleDocumentTypes:
+          - CFBundleTypeName: ScanPhotoEditor Project
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Owner
+            LSItemContentTypes:
+              - com.shuichi.scanphoto
+            LSTypeIsPackage: true
+    entitlements:
+      path: ScanPhotoEditor/Support/ScanPhotoEditor.entitlements
+    scheme:
+      testTargets:
+        - ScanPhotoEditorTests
+        - ScanPhotoEditorUITests
+  ScanPhotoEditorTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: ScanPhotoEditorTests
+    dependencies:
+      - target: ScanPhotoEditor
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shuichi.ScanPhotoEditorTests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/ScanPhotoEditor.app/Contents/MacOS/ScanPhotoEditor"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+  ScanPhotoEditorUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - path: ScanPhotoEditorUITests
+    dependencies:
+      - target: ScanPhotoEditor
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shuichi.ScanPhotoEditorUITests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: ScanPhotoEditor
+

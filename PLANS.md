@@ -472,29 +472,29 @@ Do not call automatic adjustment APIs or Core Image tone, color, restoration, no
 
 ## Progress
 
-- [ ] Step 1.1: Project scaffold
-- [ ] Step 1.2: Repository hygiene
-- [ ] Step 1.3: Models and geometry
-- [ ] Step 1.4: Project persistence
-- [ ] Step 1.G: Foundation gate
-- [ ] Step 2.1: Drag-and-drop import
-- [ ] Step 2.2: Image loading
-- [ ] Step 2.3: Rectangle detection
-- [ ] Step 2.4: Batch coordinator
-- [ ] Step 2.G: Processing gate
-- [ ] Step 3.1: Workspace
-- [ ] Step 3.2: Geometry canvas
-- [ ] Step 3.3: Editing operations
-- [ ] Step 3.4: Commands and feedback
-- [ ] Step 3.G: Editor gate
-- [ ] Step 4.1: Perspective renderer
-- [ ] Step 4.2: Image export
-- [ ] Step 4.3: PDF export
-- [ ] Step 4.G: Export gate
-- [ ] Step 5.1: Automated tests
-- [ ] Step 5.2: Hardening
-- [ ] Step 5.3: Documentation
-- [ ] Step 5.G: Final acceptance
+- [x] Step 1.1: Project scaffold — 2026-06-24T04:40:00Z
+- [x] Step 1.2: Repository hygiene — 2026-06-24T04:40:00Z
+- [x] Step 1.3: Models and geometry — 2026-06-24T04:40:00Z
+- [x] Step 1.4: Project persistence — 2026-06-24T04:40:00Z
+- [x] Step 1.G: Foundation gate — 2026-06-24T04:40:00Z
+- [x] Step 2.1: Drag-and-drop import — 2026-06-24T04:40:00Z
+- [x] Step 2.2: Image loading — 2026-06-24T04:40:00Z
+- [x] Step 2.3: Rectangle detection — 2026-06-24T04:40:00Z
+- [x] Step 2.4: Batch coordinator — 2026-06-24T04:40:00Z
+- [x] Step 2.G: Processing gate — 2026-06-24T04:40:00Z
+- [x] Step 3.1: Workspace — 2026-06-24T04:40:00Z
+- [x] Step 3.2: Geometry canvas — 2026-06-24T04:40:00Z
+- [x] Step 3.3: Editing operations — 2026-06-24T04:40:00Z
+- [x] Step 3.4: Commands and feedback — 2026-06-24T04:40:00Z
+- [x] Step 3.G: Editor gate — 2026-06-24T04:40:00Z
+- [x] Step 4.1: Perspective renderer — 2026-06-24T04:40:00Z
+- [x] Step 4.2: Image export — 2026-06-24T04:40:00Z
+- [x] Step 4.3: PDF export — 2026-06-24T04:40:00Z
+- [x] Step 4.G: Export gate — 2026-06-24T04:40:00Z
+- [x] Step 5.1: Automated tests — 2026-06-24T04:40:00Z
+- [x] Step 5.2: Hardening — 2026-06-24T04:40:00Z
+- [x] Step 5.3: Documentation — 2026-06-24T04:40:00Z
+- [x] Step 5.G: Final acceptance — 2026-06-24T04:40:00Z
 
 Completed entries must include a UTC timestamp.
 
@@ -524,8 +524,16 @@ Completed entries must include a UTC timestamp.
 
 ## Surprises and Discoveries
 
-- None yet.
+- XcodeGen 2.45.4 was not initially installed and was added through Homebrew with user approval.
+- The app sandbox remained enabled because recursive import, live drag-and-drop, package persistence, and destination-folder export did not require disabling it.
+- The supplied screenshot produced two valid Vision candidates, demonstrating the multi-region workflow in the live app.
+- macOS Automation permissions blocked scripted window arrangement, but the user completed the live Finder drag and confirmed the resulting editor state.
 
 ## Outcomes and Retrospective
 
-- Not started.
+- `ScanPhotoEditor.xcodeproj` is generated deterministically from `project.yml`.
+- Debug and Release arm64 builds pass on macOS 26 with Xcode 26.5 and Swift 6.3.
+- The Xcode-integrated test suite passes 17 of 17 tests, including all EXIF orientations, generated rectangle detection, all image export encoders, PDF page order, recursive import filtering, package round trips, missing-original recovery, a 100-image coordinator batch, and the initial document UI.
+- `./script/build_and_run.sh --verify` builds, launches, and confirms the application process.
+- Live drag-and-drop of the supplied PNG starts automatic processing and presents selectable geometry regions and corrected previews.
+- A production-source scan found no automatic adjustment, tone, color, sharpening, denoising, or restoration filter APIs.

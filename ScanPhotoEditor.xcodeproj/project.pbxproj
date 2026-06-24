@@ -1,0 +1,684 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		015323AAA4D2906677DDBA92 /* ProjectSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2504D1D592359CA8418C8E18 /* ProjectSidebarView.swift */; };
+		13C2C0A0A7EF465990090473 /* GeometryInspectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0EEC7A19E8BE7E574356AD /* GeometryInspectorView.swift */; };
+		1595E21E3CE74B09D35E6EC6 /* ImageImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C207F131258A1FB970595051 /* ImageImportService.swift */; };
+		2CAB467A4F918EE411BDE1C7 /* ScanPhotoEditorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6003534EEA2D2A733604866C /* ScanPhotoEditorApp.swift */; };
+		2E0244B19B781624449B0785 /* ExportSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42093083E435292E12EDE68E /* ExportSheetView.swift */; };
+		3863274865F8382F93702E39 /* ScanPhotoCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67E40DB0FFA999BB9F660AF1 /* ScanPhotoCommands.swift */; };
+		4E689DAE6EF45E41DFA677DC /* ProjectModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B4601C3CAC32CDDEAD256E /* ProjectModels.swift */; };
+		5D0659B10425E64DCCA6EE37 /* ProjectRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46894EFADF06B9B28169FA1C /* ProjectRootView.swift */; };
+		7327B453B25A93EFF431E00A /* ImageExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24F13A5F74FC861ADA848D73 /* ImageExportService.swift */; };
+		7650F28EB43C12F8DAC15E23 /* ProjectEditingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2763A9FDE297F02D52BAD6E /* ProjectEditingStore.swift */; };
+		790B81212F86168D3CF26455 /* ProcessingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA398B240194A7402E33B0C /* ProcessingCoordinator.swift */; };
+		7DC7C38FBFA09361397FB9CE /* ImportAndManifestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87E1998855CADF026EFF3A9 /* ImportAndManifestTests.swift */; };
+		869A04F9B473424D4E3C3264 /* ScanPhotoEditorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73F75C5825D7CF14EF7B14A3 /* ScanPhotoEditorUITests.swift */; };
+		9D314398201C2E5340425282 /* NormalizedGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ACD48EE1A5F502905B44ECD /* NormalizedGeometry.swift */; };
+		AD2B906FC47773D7224767AC /* ImageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F501AC3CBC9CC2D2053AFF1D /* ImageLoader.swift */; };
+		C3DFA102AEDA1C2C3E2865E1 /* PDFExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E63C76A7FFD8654627FA5F /* PDFExportService.swift */; };
+		C7DF94721A69CCE02FCC51EE /* PerspectiveRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04BD852DBE6F72F84E10AC4F /* PerspectiveRenderer.swift */; };
+		CACA23420ACF01BF62924283 /* CorrectedPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46B998B192BE5B7DEB98D581 /* CorrectedPreviewView.swift */; };
+		D92DF0C5F571A47B6E6150BC /* GeometryCanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2740856D207068365AF50A93 /* GeometryCanvasView.swift */; };
+		E21C0260E25E06DBEB5A5DA7 /* PhotoProjectDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD7A2824F7824D9003029C9D /* PhotoProjectDocument.swift */; };
+		EF7C0F3B6E76D3C8FBA0CDB7 /* RectangleDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8BA8333FCB63AD9D10A9314 /* RectangleDetectionService.swift */; };
+		F99B3168EDE9390B724D62F3 /* ImagePipelineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 558DBB50B2A03C7B398F61F8 /* ImagePipelineTests.swift */; };
+		FC768A9909BBA45F74268D01 /* GeometryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B057417048DB02AEF6385F34 /* GeometryTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		8C678B3BA5713AD55AA358B2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5B2E29601B234CDDC3C5E639 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D8724D6CBCADD54A8C840A6B;
+			remoteInfo = ScanPhotoEditor;
+		};
+		C939A2D28D4222A9167C41A5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5B2E29601B234CDDC3C5E639 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D8724D6CBCADD54A8C840A6B;
+			remoteInfo = ScanPhotoEditor;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		04BD852DBE6F72F84E10AC4F /* PerspectiveRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerspectiveRenderer.swift; sourceTree = "<group>"; };
+		0ACD48EE1A5F502905B44ECD /* NormalizedGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NormalizedGeometry.swift; sourceTree = "<group>"; };
+		14B4601C3CAC32CDDEAD256E /* ProjectModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectModels.swift; sourceTree = "<group>"; };
+		24F13A5F74FC861ADA848D73 /* ImageExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageExportService.swift; sourceTree = "<group>"; };
+		2504D1D592359CA8418C8E18 /* ProjectSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSidebarView.swift; sourceTree = "<group>"; };
+		2740856D207068365AF50A93 /* GeometryCanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeometryCanvasView.swift; sourceTree = "<group>"; };
+		2D7351653BEE5C60310C9E67 /* ScanPhotoEditor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ScanPhotoEditor.entitlements; sourceTree = "<group>"; };
+		42093083E435292E12EDE68E /* ExportSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportSheetView.swift; sourceTree = "<group>"; };
+		46894EFADF06B9B28169FA1C /* ProjectRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRootView.swift; sourceTree = "<group>"; };
+		46B998B192BE5B7DEB98D581 /* CorrectedPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrectedPreviewView.swift; sourceTree = "<group>"; };
+		558DBB50B2A03C7B398F61F8 /* ImagePipelineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePipelineTests.swift; sourceTree = "<group>"; };
+		6003534EEA2D2A733604866C /* ScanPhotoEditorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanPhotoEditorApp.swift; sourceTree = "<group>"; };
+		67E40DB0FFA999BB9F660AF1 /* ScanPhotoCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanPhotoCommands.swift; sourceTree = "<group>"; };
+		73F75C5825D7CF14EF7B14A3 /* ScanPhotoEditorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanPhotoEditorUITests.swift; sourceTree = "<group>"; };
+		AFA398B240194A7402E33B0C /* ProcessingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingCoordinator.swift; sourceTree = "<group>"; };
+		B057417048DB02AEF6385F34 /* GeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeometryTests.swift; sourceTree = "<group>"; };
+		B87E1998855CADF026EFF3A9 /* ImportAndManifestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportAndManifestTests.swift; sourceTree = "<group>"; };
+		B8BA8333FCB63AD9D10A9314 /* RectangleDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectangleDetectionService.swift; sourceTree = "<group>"; };
+		BB0EEC7A19E8BE7E574356AD /* GeometryInspectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeometryInspectorView.swift; sourceTree = "<group>"; };
+		C207F131258A1FB970595051 /* ImageImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageImportService.swift; sourceTree = "<group>"; };
+		C4E63C76A7FFD8654627FA5F /* PDFExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFExportService.swift; sourceTree = "<group>"; };
+		C4F8B62D6E28929F89BC16CC /* ScanPhotoEditorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScanPhotoEditorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DD7A2824F7824D9003029C9D /* PhotoProjectDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoProjectDocument.swift; sourceTree = "<group>"; };
+		DDE460935A1CF769865CB9EB /* ScanPhotoEditorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScanPhotoEditorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		EA467BB87038EA468CCDB068 /* ScanPhotoEditor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScanPhotoEditor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2763A9FDE297F02D52BAD6E /* ProjectEditingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectEditingStore.swift; sourceTree = "<group>"; };
+		F501AC3CBC9CC2D2053AFF1D /* ImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageLoader.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		3649FC5D66FA3C62FBEC19B1 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				24F13A5F74FC861ADA848D73 /* ImageExportService.swift */,
+				C207F131258A1FB970595051 /* ImageImportService.swift */,
+				F501AC3CBC9CC2D2053AFF1D /* ImageLoader.swift */,
+				C4E63C76A7FFD8654627FA5F /* PDFExportService.swift */,
+				04BD852DBE6F72F84E10AC4F /* PerspectiveRenderer.swift */,
+				AFA398B240194A7402E33B0C /* ProcessingCoordinator.swift */,
+				B8BA8333FCB63AD9D10A9314 /* RectangleDetectionService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		3AEBF4E355A2FE9C5462585B = {
+			isa = PBXGroup;
+			children = (
+				A909D122393A79435559F210 /* ScanPhotoEditor */,
+				C4744174FBEFB8C9914A5309 /* ScanPhotoEditorTests */,
+				41A0CD4CB4ED9DE4BA81295A /* ScanPhotoEditorUITests */,
+				685BF9924BA0401FE3091903 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		41A0CD4CB4ED9DE4BA81295A /* ScanPhotoEditorUITests */ = {
+			isa = PBXGroup;
+			children = (
+				73F75C5825D7CF14EF7B14A3 /* ScanPhotoEditorUITests.swift */,
+			);
+			path = ScanPhotoEditorUITests;
+			sourceTree = "<group>";
+		};
+		48629580D978E0E53B350E52 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				46894EFADF06B9B28169FA1C /* ProjectRootView.swift */,
+				2504D1D592359CA8418C8E18 /* ProjectSidebarView.swift */,
+				C29310E2DE56D896C1A032BB /* Components */,
+				6AD4BAB1C244778DF71E1E51 /* Editor */,
+				BD602E8B1B50B32EF54BB786 /* Export */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		685BF9924BA0401FE3091903 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EA467BB87038EA468CCDB068 /* ScanPhotoEditor.app */,
+				C4F8B62D6E28929F89BC16CC /* ScanPhotoEditorTests.xctest */,
+				DDE460935A1CF769865CB9EB /* ScanPhotoEditorUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6AD4BAB1C244778DF71E1E51 /* Editor */ = {
+			isa = PBXGroup;
+			children = (
+				46B998B192BE5B7DEB98D581 /* CorrectedPreviewView.swift */,
+				2740856D207068365AF50A93 /* GeometryCanvasView.swift */,
+			);
+			path = Editor;
+			sourceTree = "<group>";
+		};
+		7FFEAC987D1B98FE27BA521B /* App */ = {
+			isa = PBXGroup;
+			children = (
+				67E40DB0FFA999BB9F660AF1 /* ScanPhotoCommands.swift */,
+				6003534EEA2D2A733604866C /* ScanPhotoEditorApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		82221F41099BD2A02D6FA179 /* Documents */ = {
+			isa = PBXGroup;
+			children = (
+				DD7A2824F7824D9003029C9D /* PhotoProjectDocument.swift */,
+			);
+			path = Documents;
+			sourceTree = "<group>";
+		};
+		96EED8AEF166D8D57C689C5B /* Geometry */ = {
+			isa = PBXGroup;
+			children = (
+				0ACD48EE1A5F502905B44ECD /* NormalizedGeometry.swift */,
+			);
+			path = Geometry;
+			sourceTree = "<group>";
+		};
+		A909D122393A79435559F210 /* ScanPhotoEditor */ = {
+			isa = PBXGroup;
+			children = (
+				7FFEAC987D1B98FE27BA521B /* App */,
+				82221F41099BD2A02D6FA179 /* Documents */,
+				C9C015854A47A9D1E0A2A3C9 /* Models */,
+				3649FC5D66FA3C62FBEC19B1 /* Services */,
+				C8F22F6112E68C0BEC0B7B67 /* Stores */,
+				FF97793B7804C4525D059BB6 /* Support */,
+				48629580D978E0E53B350E52 /* Views */,
+			);
+			path = ScanPhotoEditor;
+			sourceTree = "<group>";
+		};
+		BD602E8B1B50B32EF54BB786 /* Export */ = {
+			isa = PBXGroup;
+			children = (
+				42093083E435292E12EDE68E /* ExportSheetView.swift */,
+			);
+			path = Export;
+			sourceTree = "<group>";
+		};
+		C29310E2DE56D896C1A032BB /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				BB0EEC7A19E8BE7E574356AD /* GeometryInspectorView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		C4744174FBEFB8C9914A5309 /* ScanPhotoEditorTests */ = {
+			isa = PBXGroup;
+			children = (
+				B057417048DB02AEF6385F34 /* GeometryTests.swift */,
+				558DBB50B2A03C7B398F61F8 /* ImagePipelineTests.swift */,
+				B87E1998855CADF026EFF3A9 /* ImportAndManifestTests.swift */,
+			);
+			path = ScanPhotoEditorTests;
+			sourceTree = "<group>";
+		};
+		C8F22F6112E68C0BEC0B7B67 /* Stores */ = {
+			isa = PBXGroup;
+			children = (
+				F2763A9FDE297F02D52BAD6E /* ProjectEditingStore.swift */,
+			);
+			path = Stores;
+			sourceTree = "<group>";
+		};
+		C9C015854A47A9D1E0A2A3C9 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				14B4601C3CAC32CDDEAD256E /* ProjectModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		FF97793B7804C4525D059BB6 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				2D7351653BEE5C60310C9E67 /* ScanPhotoEditor.entitlements */,
+				96EED8AEF166D8D57C689C5B /* Geometry */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1C88773059535D9249D76EA5 /* ScanPhotoEditorTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 346E4469711B49033F7ADBCD /* Build configuration list for PBXNativeTarget "ScanPhotoEditorTests" */;
+			buildPhases = (
+				BB11C2049DBE23FA20E3397A /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E9788E54E7BBCC2F29F984E8 /* PBXTargetDependency */,
+			);
+			name = ScanPhotoEditorTests;
+			packageProductDependencies = (
+			);
+			productName = ScanPhotoEditorTests;
+			productReference = C4F8B62D6E28929F89BC16CC /* ScanPhotoEditorTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		6765518CC66E616E42B1A2E9 /* ScanPhotoEditorUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 119D435F8EFFE038A4A17164 /* Build configuration list for PBXNativeTarget "ScanPhotoEditorUITests" */;
+			buildPhases = (
+				DDAF431708FC46E25245E20D /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8BF85585504D4851BD268E3D /* PBXTargetDependency */,
+			);
+			name = ScanPhotoEditorUITests;
+			packageProductDependencies = (
+			);
+			productName = ScanPhotoEditorUITests;
+			productReference = DDE460935A1CF769865CB9EB /* ScanPhotoEditorUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		D8724D6CBCADD54A8C840A6B /* ScanPhotoEditor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DAFAD96EDAA6B488E1BEC889 /* Build configuration list for PBXNativeTarget "ScanPhotoEditor" */;
+			buildPhases = (
+				6625FA8E9525951522131631 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ScanPhotoEditor;
+			packageProductDependencies = (
+			);
+			productName = ScanPhotoEditor;
+			productReference = EA467BB87038EA468CCDB068 /* ScanPhotoEditor.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		5B2E29601B234CDDC3C5E639 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					1C88773059535D9249D76EA5 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					6765518CC66E616E42B1A2E9 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+						TestTargetID = D8724D6CBCADD54A8C840A6B;
+					};
+					D8724D6CBCADD54A8C840A6B = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = F59079EE7B77C4CDF3BAE9FF /* Build configuration list for PBXProject "ScanPhotoEditor" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 3AEBF4E355A2FE9C5462585B;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 685BF9924BA0401FE3091903 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D8724D6CBCADD54A8C840A6B /* ScanPhotoEditor */,
+				1C88773059535D9249D76EA5 /* ScanPhotoEditorTests */,
+				6765518CC66E616E42B1A2E9 /* ScanPhotoEditorUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6625FA8E9525951522131631 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CACA23420ACF01BF62924283 /* CorrectedPreviewView.swift in Sources */,
+				2E0244B19B781624449B0785 /* ExportSheetView.swift in Sources */,
+				D92DF0C5F571A47B6E6150BC /* GeometryCanvasView.swift in Sources */,
+				13C2C0A0A7EF465990090473 /* GeometryInspectorView.swift in Sources */,
+				7327B453B25A93EFF431E00A /* ImageExportService.swift in Sources */,
+				1595E21E3CE74B09D35E6EC6 /* ImageImportService.swift in Sources */,
+				AD2B906FC47773D7224767AC /* ImageLoader.swift in Sources */,
+				9D314398201C2E5340425282 /* NormalizedGeometry.swift in Sources */,
+				C3DFA102AEDA1C2C3E2865E1 /* PDFExportService.swift in Sources */,
+				C7DF94721A69CCE02FCC51EE /* PerspectiveRenderer.swift in Sources */,
+				E21C0260E25E06DBEB5A5DA7 /* PhotoProjectDocument.swift in Sources */,
+				790B81212F86168D3CF26455 /* ProcessingCoordinator.swift in Sources */,
+				7650F28EB43C12F8DAC15E23 /* ProjectEditingStore.swift in Sources */,
+				4E689DAE6EF45E41DFA677DC /* ProjectModels.swift in Sources */,
+				5D0659B10425E64DCCA6EE37 /* ProjectRootView.swift in Sources */,
+				015323AAA4D2906677DDBA92 /* ProjectSidebarView.swift in Sources */,
+				EF7C0F3B6E76D3C8FBA0CDB7 /* RectangleDetectionService.swift in Sources */,
+				3863274865F8382F93702E39 /* ScanPhotoCommands.swift in Sources */,
+				2CAB467A4F918EE411BDE1C7 /* ScanPhotoEditorApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BB11C2049DBE23FA20E3397A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FC768A9909BBA45F74268D01 /* GeometryTests.swift in Sources */,
+				F99B3168EDE9390B724D62F3 /* ImagePipelineTests.swift in Sources */,
+				7DC7C38FBFA09361397FB9CE /* ImportAndManifestTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DDAF431708FC46E25245E20D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				869A04F9B473424D4E3C3264 /* ScanPhotoEditorUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8BF85585504D4851BD268E3D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D8724D6CBCADD54A8C840A6B /* ScanPhotoEditor */;
+			targetProxy = C939A2D28D4222A9167C41A5 /* PBXContainerItemProxy */;
+		};
+		E9788E54E7BBCC2F29F984E8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D8724D6CBCADD54A8C840A6B /* ScanPhotoEditor */;
+			targetProxy = 8C678B3BA5713AD55AA358B2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0AFFC93A99AC38CBF8AF46A2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.shuichi.ScanPhotoEditorTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ScanPhotoEditor.app/Contents/MacOS/ScanPhotoEditor";
+			};
+			name = Release;
+		};
+		0D36C6F5A80CAC421A05E410 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ScanPhotoEditor/Support/ScanPhotoEditor.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = ScanPhotoEditor;
+				INFOPLIST_KEY_CFBundleDocumentTypes = "[[\"CFBundleTypeName\": \"ScanPhotoEditor Project\", \"CFBundleTypeRole\": \"Editor\", \"LSItemContentTypes\": [\"com.shuichi.scanphoto\"], \"LSHandlerRank\": \"Owner\", \"LSTypeIsPackage\": true]]";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 Shuichi";
+				INFOPLIST_KEY_UTExportedTypeDeclarations = "[[\"UTTypeConformsTo\": [\"com.apple.package\"], \"UTTypeTagSpecification\": [\"public.filename-extension\": [\"scanphoto\"]], \"UTTypeDescription\": \"ScanPhotoEditor Project\", \"UTTypeIdentifier\": \"com.shuichi.scanphoto\"]]";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.shuichi.ScanPhotoEditor;
+				PRODUCT_NAME = ScanPhotoEditor;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		28AC5C528580AD410A818265 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.shuichi.ScanPhotoEditorUITests;
+				SDKROOT = macosx;
+				TEST_TARGET_NAME = ScanPhotoEditor;
+			};
+			name = Debug;
+		};
+		3E9E3557392B1140EC9BCC88 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.shuichi.ScanPhotoEditorUITests;
+				SDKROOT = macosx;
+				TEST_TARGET_NAME = ScanPhotoEditor;
+			};
+			name = Release;
+		};
+		4346DD0327732808E14DA531 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.shuichi.ScanPhotoEditorTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ScanPhotoEditor.app/Contents/MacOS/ScanPhotoEditor";
+			};
+			name = Debug;
+		};
+		4D84D6912D6C867162EB913D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		91007EFC7C8110DCACB904C2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		9DAB1DD9F8B94C8FBC27063F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ScanPhotoEditor/Support/ScanPhotoEditor.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = ScanPhotoEditor;
+				INFOPLIST_KEY_CFBundleDocumentTypes = "[[\"CFBundleTypeName\": \"ScanPhotoEditor Project\", \"CFBundleTypeRole\": \"Editor\", \"LSItemContentTypes\": [\"com.shuichi.scanphoto\"], \"LSHandlerRank\": \"Owner\", \"LSTypeIsPackage\": true]]";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 Shuichi";
+				INFOPLIST_KEY_UTExportedTypeDeclarations = "[[\"UTTypeConformsTo\": [\"com.apple.package\"], \"UTTypeTagSpecification\": [\"public.filename-extension\": [\"scanphoto\"]], \"UTTypeDescription\": \"ScanPhotoEditor Project\", \"UTTypeIdentifier\": \"com.shuichi.scanphoto\"]]";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.shuichi.ScanPhotoEditor;
+				PRODUCT_NAME = ScanPhotoEditor;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		119D435F8EFFE038A4A17164 /* Build configuration list for PBXNativeTarget "ScanPhotoEditorUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				28AC5C528580AD410A818265 /* Debug */,
+				3E9E3557392B1140EC9BCC88 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		346E4469711B49033F7ADBCD /* Build configuration list for PBXNativeTarget "ScanPhotoEditorTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4346DD0327732808E14DA531 /* Debug */,
+				0AFFC93A99AC38CBF8AF46A2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DAFAD96EDAA6B488E1BEC889 /* Build configuration list for PBXNativeTarget "ScanPhotoEditor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9DAB1DD9F8B94C8FBC27063F /* Debug */,
+				0D36C6F5A80CAC421A05E410 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F59079EE7B77C4CDF3BAE9FF /* Build configuration list for PBXProject "ScanPhotoEditor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4D84D6912D6C867162EB913D /* Debug */,
+				91007EFC7C8110DCACB904C2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 5B2E29601B234CDDC3C5E639 /* Project object */;
+}

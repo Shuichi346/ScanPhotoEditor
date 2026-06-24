@@ -1,0 +1,10 @@
+.DS_Store
+Thumbs.db
+DerivedData*/
+build/
+dist/
+*.xcuserstate
+xcuserdata/
+.swiftpm/
+.build/
+*.scanphoto
