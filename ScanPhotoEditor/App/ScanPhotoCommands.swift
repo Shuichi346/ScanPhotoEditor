@@ -12,6 +12,13 @@ struct ScanPhotoCommands: Commands {
             .disabled(actions == nil)
         }
 
+        CommandMenu("Arrange") {
+            Button("Sort Images by File Name") {
+                actions?.sortImagesByFileName()
+            }
+            .disabled(actions?.canSortImages != true)
+        }
+
         CommandMenu("Geometry") {
             Button("Rotate Clockwise") {
                 actions?.rotateClockwise()
@@ -60,6 +67,8 @@ struct ScanPhotoCommands: Commands {
 
 struct ProjectActions {
     let export: () -> Void
+    let sortImagesByFileName: () -> Void
+    let canSortImages: Bool
     let rotateClockwise: () -> Void
     let flipHorizontal: () -> Void
     let flipVertical: () -> Void
@@ -79,4 +88,3 @@ extension FocusedValues {
         set { self[ProjectActionsKey.self] = newValue }
     }
 }
-

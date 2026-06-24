@@ -4,18 +4,25 @@ import SwiftUI
 struct ProjectSidebarView: View {
     let store: ProjectEditingStore
     let undoManager: UndoManager?
+    @ObservedObject private var document: PhotoProjectDocument
+
+    init(store: ProjectEditingStore, undoManager: UndoManager?) {
+        self.store = store
+        self.undoManager = undoManager
+        _document = ObservedObject(wrappedValue: store.document)
+    }
 
     var body: some View {
         @Bindable var store = store
 
         List(selection: $store.selectedRegionID) {
-            ForEach(store.document.manifest.sources.sorted(by: { $0.importOrder < $1.importOrder })) { source in
+            ForEach(document.manifest.sources.sorted(by: { $0.importOrder < $1.importOrder })) { source in
                 Section(source.displayName) {
                     ForEach(source.regions) { region in
                         SidebarRegionRow(
                             source: source,
                             region: region,
-                            thumbnailData: store.document.thumbnailData(for: source.id)
+                            thumbnailData: document.thumbnailData(for: source.id)
                         )
                         .tag(region.id)
                     }
@@ -27,18 +34,29 @@ struct ProjectSidebarView: View {
         }
         .listStyle(.sidebar)
         .navigationTitle("Photographs")
+        .toolbar {
+            ToolbarItem {
+                Button {
+                    store.sortImagesByFileName(undoManager: undoManager)
+                } label: {
+                    Label("Sort by File Name", systemImage: "textformat.abc")
+                }
+                .help("Sort images by file name")
+                .disabled(document.manifest.sources.count < 2)
+            }
+        }
         .onChange(of: store.selectedRegionID) {
             store.select(regionID: store.selectedRegionID)
         }
         .safeAreaInset(edge: .bottom) {
-            if store.document.isProcessing || !store.document.activityMessage.isEmpty {
+            if document.isProcessing || !document.activityMessage.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(store.document.activityMessage)
+                    Text(document.activityMessage)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
-                    if store.document.isProcessing {
-                        ProgressView(value: store.document.processingProgress)
+                    if document.isProcessing {
+                        ProgressView(value: document.processingProgress)
                         Button("Cancel") {
                             store.cancelProcessing()
                         }
@@ -102,4 +120,3 @@ private struct SidebarRegionRow: View {
         region.reviewState == .needsReview ? .orange : .secondary
     }
 }
-

@@ -86,6 +86,55 @@ final class ImportAndManifestTests: XCTestCase {
     }
 
     @MainActor
+    func testSortImagesByFileNameUsesNaturalOrderAndIsUndoable() {
+        let document = PhotoProjectDocument()
+        let first = makeSource(displayName: "Album 10", importOrder: 0, regionCount: 1)
+        let second = makeSource(displayName: "Album 2", importOrder: 1, regionCount: 2)
+        let third = makeSource(displayName: "Album 1", importOrder: 2, regionCount: 1)
+        document.manifest.sources = [first, second, third]
+        document.manifest.regionOrder = [
+            first.regions[0].id,
+            second.regions[1].id,
+            third.regions[0].id,
+            second.regions[0].id,
+        ]
+        let originalRegionOrder = document.manifest.regionOrder
+        let store = ProjectEditingStore(document: document)
+        let undoManager = UndoManager()
+        undoManager.groupsByEvent = false
+
+        undoManager.beginUndoGrouping()
+        store.sortImagesByFileName(undoManager: undoManager)
+        undoManager.endUndoGrouping()
+
+        XCTAssertEqual(
+            document.manifest.sources
+                .sorted(by: { $0.importOrder < $1.importOrder })
+                .map(\.displayName),
+            ["Album 1", "Album 2", "Album 10"]
+        )
+        XCTAssertEqual(
+            document.manifest.regionOrder,
+            [
+                third.regions[0].id,
+                second.regions[1].id,
+                second.regions[0].id,
+                first.regions[0].id,
+            ]
+        )
+
+        undoManager.undo()
+
+        XCTAssertEqual(
+            document.manifest.sources
+                .sorted(by: { $0.importOrder < $1.importOrder })
+                .map(\.displayName),
+            ["Album 10", "Album 2", "Album 1"]
+        )
+        XCTAssertEqual(document.manifest.regionOrder, originalRegionOrder)
+    }
+
+    @MainActor
     func testDocumentStoresImportedOriginalAndThumbnail() {
         let document = PhotoProjectDocument()
         let sourceID = UUID()
@@ -182,5 +231,39 @@ final class ImportAndManifestTests: XCTestCase {
                 return XCTFail("Unexpected error: \(error)")
             }
         }
+    }
+
+    private func makeSource(
+        displayName: String,
+        importOrder: Int,
+        regionCount: Int
+    ) -> SourceAsset {
+        let sourceID = UUID()
+        let regions = (0 ..< regionCount).map { order in
+            PhotoRegion(
+                id: UUID(),
+                sourceID: sourceID,
+                quadrilateral: .centered,
+                origin: .manual,
+                reviewState: .ready,
+                rotation: .zero,
+                flipHorizontal: false,
+                flipVertical: false,
+                order: order,
+                isManuallyEdited: true
+            )
+        }
+        return SourceAsset(
+            id: sourceID,
+            displayName: displayName,
+            storedFilename: "\(sourceID).jpg",
+            typeIdentifier: "public.jpeg",
+            pixelWidth: 100,
+            pixelHeight: 80,
+            importOrder: importOrder,
+            processingState: .ready,
+            processingError: nil,
+            regions: regions
+        )
     }
 }

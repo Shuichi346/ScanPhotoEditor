@@ -3,10 +3,12 @@ import SwiftUI
 
 struct ProjectRootView: View {
     @Environment(\.undoManager) private var undoManager
+    @ObservedObject private var document: PhotoProjectDocument
     @State private var store: ProjectEditingStore
     @State private var inspectorPresented = true
 
     init(document: PhotoProjectDocument) {
+        _document = ObservedObject(wrappedValue: document)
         _store = State(initialValue: ProjectEditingStore(document: document))
     }
 
@@ -152,6 +154,10 @@ struct ProjectRootView: View {
     private var projectActions: ProjectActions {
         ProjectActions(
             export: { store.isExportPresented = true },
+            sortImagesByFileName: {
+                store.sortImagesByFileName(undoManager: undoManager)
+            },
+            canSortImages: document.manifest.sources.count > 1,
             rotateClockwise: { store.rotateClockwise(undoManager: undoManager) },
             flipHorizontal: { store.flipHorizontal(undoManager: undoManager) },
             flipVertical: { store.flipVertical(undoManager: undoManager) },

@@ -20,15 +20,15 @@ The Codex Run action invokes the same build script.
 ## Usage
 
 1. Create or open a `.scanphoto` document.
-2. Drop image files or folders anywhere in the document window.
-3. Select detected regions in the sidebar.
-4. Drag corner or edge handles over the source image. Use the toolbar to rotate, flip, add, delete, reset, or rerun detection.
-5. Save the document. Originals, thumbnails, geometry, and order remain inside the package.
-6. Choose **File → Export** to export selected or all regions as JPEG, HEIC, PNG, TIFF, and/or an ordered PDF.
+2. Optionally set **ScanPhotoEditor → Settings → Maximum detections per image**. The default is 1.
+3. Drop image files or folders anywhere in the document window.
+4. Select detected regions in the sidebar.
+5. Drag corner or edge handles over the source image. Use the toolbar to rotate, flip, add, delete, reset, or rerun detection.
+6. Save the document. Originals, thumbnails, geometry, and order remain inside the package.
+7. Choose **File → Export** to export selected or all regions as JPEG, HEIC, PNG, TIFF, and/or an ordered PDF.
 
 Supported imports are HEIC/HEIF, JPEG, PNG, and TIFF. Hidden files, packages, and symlinks are skipped during recursive folder import.
 
 ## Image-preservation guarantee
 
 The rendering pipeline is restricted to EXIF orientation normalization, perspective correction, explicit rotation, explicit flips, and encoder-required color-profile handling. It does not perform tone, color, restoration, sharpening, denoising, or other automatic enhancement.
-

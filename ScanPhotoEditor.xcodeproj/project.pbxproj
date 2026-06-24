@@ -10,6 +10,7 @@
 		015323AAA4D2906677DDBA92 /* ProjectSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2504D1D592359CA8418C8E18 /* ProjectSidebarView.swift */; };
 		13C2C0A0A7EF465990090473 /* GeometryInspectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0EEC7A19E8BE7E574356AD /* GeometryInspectorView.swift */; };
 		1595E21E3CE74B09D35E6EC6 /* ImageImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C207F131258A1FB970595051 /* ImageImportService.swift */; };
+		1ED170E157ABC92696BD8E1E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9C0B786DE0D25ECCAD91CC /* SettingsView.swift */; };
 		26A1EAC64A75AF54267C8B25 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 7FF584C99E62FEB4A96B58BE /* AppIcon.icns */; };
 		2CAB467A4F918EE411BDE1C7 /* ScanPhotoEditorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6003534EEA2D2A733604866C /* ScanPhotoEditorApp.swift */; };
 		2E0244B19B781624449B0785 /* ExportSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42093083E435292E12EDE68E /* ExportSheetView.swift */; };
@@ -66,6 +67,7 @@
 		67E40DB0FFA999BB9F660AF1 /* ScanPhotoCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanPhotoCommands.swift; sourceTree = "<group>"; };
 		73F75C5825D7CF14EF7B14A3 /* ScanPhotoEditorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanPhotoEditorUITests.swift; sourceTree = "<group>"; };
 		7FF584C99E62FEB4A96B58BE /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
+		AC9C0B786DE0D25ECCAD91CC /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		AFA398B240194A7402E33B0C /* ProcessingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingCoordinator.swift; sourceTree = "<group>"; };
 		B057417048DB02AEF6385F34 /* GeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeometryTests.swift; sourceTree = "<group>"; };
 		B87E1998855CADF026EFF3A9 /* ImportAndManifestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportAndManifestTests.swift; sourceTree = "<group>"; };
@@ -120,6 +122,7 @@
 			children = (
 				46894EFADF06B9B28169FA1C /* ProjectRootView.swift */,
 				2504D1D592359CA8418C8E18 /* ProjectSidebarView.swift */,
+				AC9C0B786DE0D25ECCAD91CC /* SettingsView.swift */,
 				C29310E2DE56D896C1A032BB /* Components */,
 				6AD4BAB1C244778DF71E1E51 /* Editor */,
 				BD602E8B1B50B32EF54BB786 /* Export */,
@@ -383,6 +386,7 @@
 				EF7C0F3B6E76D3C8FBA0CDB7 /* RectangleDetectionService.swift in Sources */,
 				3863274865F8382F93702E39 /* ScanPhotoCommands.swift in Sources */,
 				2CAB467A4F918EE411BDE1C7 /* ScanPhotoEditorApp.swift in Sources */,
+				1ED170E157ABC92696BD8E1E /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -7,10 +7,35 @@ struct DetectionCandidate: Sendable {
     let confidence: Float
 }
 
+enum DetectionPreferences {
+    static let maximumDetectionsKey = "maximumDetectionsPerImage"
+    static let defaultMaximumDetections = 1
+    static let maximumDetectionsRange = 1 ... 32
+
+    static func normalizedMaximumDetections(_ value: Int) -> Int {
+        min(
+            max(value, maximumDetectionsRange.lowerBound),
+            maximumDetectionsRange.upperBound
+        )
+    }
+
+    @MainActor
+    static var maximumDetections: Int {
+        let defaults = UserDefaults.standard
+        guard defaults.object(forKey: maximumDetectionsKey) != nil else {
+            return defaultMaximumDetections
+        }
+        return normalizedMaximumDetections(defaults.integer(forKey: maximumDetectionsKey))
+    }
+}
+
 enum RectangleDetectionService {
-    static func detect(in image: CGImage) async throws -> [DetectionCandidate] {
+    static func detect(
+        in image: CGImage,
+        maximumDetections: Int = DetectionPreferences.defaultMaximumDetections
+    ) async throws -> [DetectionCandidate] {
         var request = DetectRectanglesRequest()
-        request.maximumObservations = 32
+        request.maximumObservations = DetectionPreferences.maximumDetectionsRange.upperBound
         request.minimumSize = 0.05
         request.minimumConfidence = 0.35
         request.minimumAspectRatio = 0.20
@@ -31,7 +56,9 @@ enum RectangleDetectionService {
                 confidence: observation.confidence
             )
         }
+        let limit = DetectionPreferences.normalizedMaximumDetections(maximumDetections)
         return deduplicate(candidates)
+            .prefix(limit)
             .sorted {
                 let lhs = $0.quadrilateral.centroid
                 let rhs = $1.quadrilateral.centroid
@@ -61,4 +88,3 @@ enum RectangleDetectionService {
             }
     }
 }
-

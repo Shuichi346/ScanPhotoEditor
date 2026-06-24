@@ -10,5 +10,9 @@ struct ScanPhotoEditorApp: App {
         .commands {
             ScanPhotoCommands()
         }
+
+        Settings {
+            SettingsView()
+        }
     }
 }

@@ -49,7 +49,22 @@ final class ImagePipelineTests: XCTestCase {
         let candidates = try await RectangleDetectionService.detect(in: image)
 
         XCTAssertFalse(candidates.isEmpty)
+        XCTAssertLessThanOrEqual(
+            candidates.count,
+            DetectionPreferences.defaultMaximumDetections
+        )
         XCTAssertTrue(candidates.allSatisfy { $0.quadrilateral.isValid() })
+    }
+
+    func testMaximumDetectionPreferenceIsClampedToSupportedRange() {
+        XCTAssertEqual(
+            DetectionPreferences.normalizedMaximumDetections(0),
+            DetectionPreferences.maximumDetectionsRange.lowerBound
+        )
+        XCTAssertEqual(
+            DetectionPreferences.normalizedMaximumDetections(100),
+            DetectionPreferences.maximumDetectionsRange.upperBound
+        )
     }
 
     func testEveryImageExportFormatDecodes() throws {
@@ -103,7 +118,11 @@ final class ImagePipelineTests: XCTestCase {
         }
         let coordinator = ProcessingCoordinator()
 
-        let processed = await coordinator.process(images: images, startingImportOrder: 0)
+        let processed = await coordinator.process(
+            images: images,
+            startingImportOrder: 0,
+            maximumDetections: DetectionPreferences.defaultMaximumDetections
+        )
 
         XCTAssertEqual(processed.count, 100)
         XCTAssertEqual(Set(processed.map(\.source.importOrder)), Set(0 ..< 100))

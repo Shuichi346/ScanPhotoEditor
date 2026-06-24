@@ -16,7 +16,8 @@ actor ProcessingCoordinator {
 
     func process(
         images: [ImportedImage],
-        startingImportOrder: Int
+        startingImportOrder: Int,
+        maximumDetections: Int
     ) async -> [ProcessedImport] {
         isCancelled = false
         var iterator = images.enumerated().makeIterator()
@@ -28,7 +29,8 @@ actor ProcessingCoordinator {
                     group.addTask {
                         await Self.processOne(
                             item.element,
-                            importOrder: startingImportOrder + item.offset
+                            importOrder: startingImportOrder + item.offset,
+                            maximumDetections: maximumDetections
                         )
                     }
                 }
@@ -42,7 +44,8 @@ actor ProcessingCoordinator {
                 group.addTask {
                     await Self.processOne(
                         item.element,
-                        importOrder: startingImportOrder + item.offset
+                        importOrder: startingImportOrder + item.offset,
+                        maximumDetections: maximumDetections
                     )
                 }
             }
@@ -52,7 +55,8 @@ actor ProcessingCoordinator {
 
     private static func processOne(
         _ imported: ImportedImage,
-        importOrder: Int
+        importOrder: Int,
+        maximumDetections: Int
     ) async -> ProcessedImport? {
         let sourceID = UUID()
         let fileExtension = imported.url.pathExtension.lowercased()
@@ -65,7 +69,10 @@ actor ProcessingCoordinator {
                 maximumDimension: 2_048
             )
             let thumbnailData = try? ImageLoader.jpegThumbnail(data: imported.data)
-            let candidates = try await RectangleDetectionService.detect(in: detectionImage.image)
+            let candidates = try await RectangleDetectionService.detect(
+                in: detectionImage.image,
+                maximumDetections: maximumDetections
+            )
             let regions: [PhotoRegion]
             if candidates.isEmpty {
                 regions = [

@@ -83,7 +83,8 @@ final class ProjectEditingStore {
             document.activityMessage = "Detecting photographs…"
             let processed = await processingCoordinator.process(
                 images: discovery.images,
-                startingImportOrder: document.manifest.sources.count
+                startingImportOrder: document.manifest.sources.count,
+                maximumDetections: DetectionPreferences.maximumDetections
             )
             guard !Task.isCancelled else { return }
 
@@ -244,7 +245,10 @@ final class ProjectEditingStore {
         Task {
             do {
                 let loaded = try ImageLoader.loadUprightImage(data: data, maximumDimension: 2_048)
-                let candidates = try await RectangleDetectionService.detect(in: loaded.image)
+                let candidates = try await RectangleDetectionService.detect(
+                    in: loaded.image,
+                    maximumDetections: DetectionPreferences.maximumDetections
+                )
                 let regions = Self.makeRegions(
                     candidates: candidates,
                     sourceID: source.id
@@ -278,6 +282,55 @@ final class ProjectEditingStore {
             target.setRegionOrder(previous, inverse: next, undoManager: undoManager)
         }
         undoManager?.setActionName("Reorder Regions")
+    }
+
+    func sortImagesByFileName(undoManager: UndoManager?) {
+        let previousSources = document.manifest.sources
+        let previousRegionOrder = document.manifest.regionOrder
+        guard previousSources.count > 1 else { return }
+
+        let sortedSources = previousSources.sorted { lhs, rhs in
+            let comparison = lhs.displayName.localizedStandardCompare(rhs.displayName)
+            if comparison != .orderedSame {
+                return comparison == .orderedAscending
+            }
+            if lhs.importOrder != rhs.importOrder {
+                return lhs.importOrder < rhs.importOrder
+            }
+            return lhs.id.uuidString < rhs.id.uuidString
+        }
+
+        var updatedSources = previousSources
+        for (importOrder, source) in sortedSources.enumerated() {
+            guard let index = updatedSources.firstIndex(where: { $0.id == source.id }) else {
+                continue
+            }
+            updatedSources[index].importOrder = importOrder
+        }
+
+        let currentPositions = Dictionary(
+            uniqueKeysWithValues: previousRegionOrder.enumerated().map { ($0.element, $0.offset) }
+        )
+        let sortedRegionOrder = sortedSources.flatMap { source in
+            source.regions
+                .sorted {
+                    currentPositions[$0.id, default: Int.max]
+                        < currentPositions[$1.id, default: Int.max]
+                }
+                .map(\.id)
+        }
+        let sortedRegionIDs = Set(sortedRegionOrder)
+        let nextRegionOrder = sortedRegionOrder
+            + previousRegionOrder.filter { !sortedRegionIDs.contains($0) }
+
+        setImageOrdering(
+            sources: updatedSources,
+            regionOrder: nextRegionOrder,
+            inverseSources: previousSources,
+            inverseRegionOrder: previousRegionOrder,
+            undoManager: undoManager
+        )
+        undoManager?.setActionName("Sort Images by File Name")
     }
 
     func refreshPreviews() {
@@ -518,6 +571,27 @@ final class ProjectEditingStore {
         }
     }
 
+    private func setImageOrdering(
+        sources: [SourceAsset],
+        regionOrder: [UUID],
+        inverseSources: [SourceAsset],
+        inverseRegionOrder: [UUID],
+        undoManager: UndoManager?
+    ) {
+        document.manifest.sources = sources
+        document.manifest.regionOrder = regionOrder
+        document.manifest.modifiedAt = Date()
+        undoManager?.registerUndo(withTarget: self) { target in
+            target.setImageOrdering(
+                sources: inverseSources,
+                regionOrder: inverseRegionOrder,
+                inverseSources: sources,
+                inverseRegionOrder: regionOrder,
+                undoManager: undoManager
+            )
+        }
+    }
+
     private static func makeRegions(
         candidates: [DetectionCandidate],
         sourceID: UUID
@@ -541,4 +615,3 @@ final class ProjectEditingStore {
         }
     }
 }
-
