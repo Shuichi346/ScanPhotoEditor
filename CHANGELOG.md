@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Improved crop precision by making corner handles transparent and adding red crosshairs.
 - Added undoable filename sorting for imported images, including export and PDF page ordering.
 - Added a persisted setting for the maximum number of detections per image, defaulting to one.
 - Fixed source-image scrolling so the full image remains reachable when zoomed above 100%.
