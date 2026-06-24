@@ -26,25 +26,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.shuichi.ScanPhotoEditor
         PRODUCT_NAME: ScanPhotoEditor
         CODE_SIGN_ENTITLEMENTS: ScanPhotoEditor/Support/ScanPhotoEditor.entitlements
-        GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: ScanPhotoEditor
-        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.photography
-        INFOPLIST_KEY_NSHumanReadableCopyright: Copyright © 2026 Shuichi
-        INFOPLIST_KEY_UTExportedTypeDeclarations:
-          - UTTypeIdentifier: com.shuichi.scanphoto
-            UTTypeDescription: ScanPhotoEditor Project
-            UTTypeConformsTo:
-              - com.apple.package
-            UTTypeTagSpecification:
-              public.filename-extension:
-                - scanphoto
-        INFOPLIST_KEY_CFBundleDocumentTypes:
-          - CFBundleTypeName: ScanPhotoEditor Project
-            CFBundleTypeRole: Editor
-            LSHandlerRank: Owner
-            LSItemContentTypes:
-              - com.shuichi.scanphoto
-            LSTypeIsPackage: true
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: ScanPhotoEditor/Support/Info.plist
     entitlements:
       path: ScanPhotoEditor/Support/ScanPhotoEditor.entitlements
     scheme:
@@ -76,4 +59,3 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.shuichi.ScanPhotoEditorUITests
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: ScanPhotoEditor
-

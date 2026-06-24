@@ -85,12 +85,7 @@ struct ProjectRootView: View {
                 Text("Drop HEIC, JPEG, PNG, TIFF files, or folders anywhere in this window.")
             }
         } else {
-            HSplitView {
-                GeometryCanvasView(store: store, undoManager: undoManager)
-                    .frame(minWidth: 480)
-                CorrectedPreviewView(image: store.correctedPreview)
-                    .frame(minWidth: 300)
-            }
+            EditorWorkspaceView(store: store, undoManager: undoManager)
         }
     }
 
@@ -168,3 +163,39 @@ struct ProjectRootView: View {
     }
 }
 
+private struct EditorWorkspaceView: View {
+    let store: ProjectEditingStore
+    let undoManager: UndoManager?
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 0) {
+                sourceEditor
+                    .frame(minWidth: 400)
+                Divider()
+                correctedPreview
+                    .frame(minWidth: 300)
+            }
+
+            VStack(spacing: 0) {
+                sourceEditor
+                    .frame(minHeight: 300)
+                Divider()
+                correctedPreview
+                    .frame(minHeight: 220)
+            }
+        }
+    }
+
+    private var sourceEditor: some View {
+        GeometryCanvasView(store: store, undoManager: undoManager)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
+    }
+
+    private var correctedPreview: some View {
+        CorrectedPreviewView(image: store.correctedPreview)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
+    }
+}
