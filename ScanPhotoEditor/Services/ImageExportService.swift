@@ -4,11 +4,13 @@ import ImageIO
 
 enum ImageExportError: LocalizedError {
     case destinationCreationFailed
+    case imagePreparationFailed
     case finalizationFailed
 
     var errorDescription: String? {
         switch self {
         case .destinationCreationFailed: "The export encoder could not be created."
+        case .imagePreparationFailed: "The image could not be prepared for export."
         case .finalizationFailed: "The export encoder could not finish the file."
         }
     }
@@ -22,6 +24,16 @@ enum ImageExportService {
         baseName: String,
         destinationDirectory: URL
     ) throws -> URL {
+        let encodedImage: CGImage
+        if format == .jpeg {
+            guard let opaqueImage = ImageRenderingContext.opaqueImage(from: image) else {
+                throw ImageExportError.imagePreparationFailed
+            }
+            encodedImage = opaqueImage
+        } else {
+            encodedImage = image
+        }
+
         let outputURL = conflictSafeURL(
             baseName: baseName,
             fileExtension: format.fileExtension,
@@ -50,7 +62,7 @@ enum ImageExportService {
         case .tiff:
             properties[kCGImagePropertyTIFFCompression] = 5
         }
-        CGImageDestinationAddImage(destination, image, properties as CFDictionary)
+        CGImageDestinationAddImage(destination, encodedImage, properties as CFDictionary)
         guard CGImageDestinationFinalize(destination) else {
             try? FileManager.default.removeItem(at: temporaryURL)
             throw ImageExportError.finalizationFailed
@@ -80,4 +92,3 @@ enum ImageExportService {
         return candidate
     }
 }
-

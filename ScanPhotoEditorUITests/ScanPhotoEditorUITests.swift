@@ -5,6 +5,7 @@ final class ScanPhotoEditorUITests: XCTestCase {
         continueAfterFailure = false
     }
 
+    @MainActor
     func testNewDocumentShowsDropTargetAndExportIsDisabled() {
         let app = XCUIApplication()
         app.launchArguments = ["-ApplePersistenceIgnoreState", "YES"]

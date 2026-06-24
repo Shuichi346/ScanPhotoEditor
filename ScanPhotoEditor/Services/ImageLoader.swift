@@ -88,6 +88,9 @@ enum ImageLoader {
 
     static func jpegThumbnail(data: Data, maximumDimension: Int = 512) throws -> Data {
         let loaded = try loadUprightImage(data: data, maximumDimension: maximumDimension)
+        guard let opaqueImage = ImageRenderingContext.opaqueImage(from: loaded.image) else {
+            throw ImageLoadingError.encodingFailed
+        }
         let result = NSMutableData()
         guard
             let destination = CGImageDestinationCreateWithData(
@@ -101,7 +104,7 @@ enum ImageLoader {
         }
         CGImageDestinationAddImage(
             destination,
-            loaded.image,
+            opaqueImage,
             [kCGImageDestinationLossyCompressionQuality: 0.82] as CFDictionary
         )
         guard CGImageDestinationFinalize(destination) else {
@@ -120,4 +123,14 @@ enum ImageRenderingContext {
         .cacheIntermediates: false,
         .priorityRequestLow: false
     ])
+
+    static func opaqueImage(from image: CGImage) -> CGImage? {
+        let ciImage = CIImage(cgImage: image)
+        return shared.createCGImage(
+            ciImage,
+            from: ciImage.extent.integral,
+            format: .RGBX8,
+            colorSpace: image.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)
+        )
+    }
 }

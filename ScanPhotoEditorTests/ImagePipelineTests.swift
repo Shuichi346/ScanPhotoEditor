@@ -89,6 +89,15 @@ final class ImagePipelineTests: XCTestCase {
         }
     }
 
+    func testOpaqueEncodingImageDoesNotCarryAlpha() throws {
+        let image = try makeTestImage(width: 64, height: 48)
+        let opaqueImage = try XCTUnwrap(ImageRenderingContext.opaqueImage(from: image))
+
+        XCTAssertTrue(
+            [.none, .noneSkipFirst, .noneSkipLast].contains(opaqueImage.alphaInfo)
+        )
+    }
+
     func testPDFPageCountMatchesOrderedImages() throws {
         let first = try makeTestImage(width: 60, height: 40)
         let second = try makeTestImage(width: 40, height: 60)
