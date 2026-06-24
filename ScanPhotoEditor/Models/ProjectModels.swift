@@ -117,7 +117,40 @@ struct ExportOptions: Sendable {
     var formats: Set<ExportImageFormat> = [.jpeg]
     var includePDF = true
     var selectedRegionIDs: Set<UUID>?
-    var quality = 0.95
+    var jpegQuality = ExportPreferences.defaultQuality
+    var heicQuality = ExportPreferences.defaultQuality
+    var pdfQuality = ExportPreferences.defaultQuality
+
+    func quality(for format: ExportImageFormat) -> Double {
+        switch format {
+        case .jpeg:
+            jpegQuality
+        case .heic:
+            heicQuality
+        case .png, .tiff:
+            1
+        }
+    }
+}
+
+enum ExportPreferences {
+    static let jpegQualityKey = "jpegExportQuality"
+    static let heicQualityKey = "heicExportQuality"
+    static let pdfQualityKey = "pdfExportQuality"
+    static let defaultQualityPercent = 80
+    static let qualityPercentRange = 1 ... 100
+    static let defaultQuality = Double(defaultQualityPercent) / 100
+
+    static func normalizedQualityPercent(_ value: Int) -> Int {
+        min(
+            max(value, qualityPercentRange.lowerBound),
+            qualityPercentRange.upperBound
+        )
+    }
+
+    static func quality(from percent: Int) -> Double {
+        Double(normalizedQualityPercent(percent)) / 100
+    }
 }
 
 struct ImportReport: Sendable {
@@ -143,4 +176,3 @@ extension UTType {
         conformingTo: .package
     )
 }
-

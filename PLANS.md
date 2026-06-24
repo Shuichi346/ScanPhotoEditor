@@ -361,7 +361,7 @@ Do not call automatic adjustment APIs or Core Image tone, color, restoration, no
 - **Agent:** `coding-agent`
 - **Location:** `ScanPhotoEditor/Services/ImageExportService.swift`
 - **Action:** Encode JPEG, HEIC, PNG, and TIFF through ImageIO.
-- **Details:** JPEG and HEIC quality default to 0.95; PNG is lossless; TIFF uses LZW. Name outputs `<source-name>_<region-number>`, adding a numeric suffix on conflicts. Strip GPS/device metadata and normalize orientation to upright.
+- **Details:** JPEG and HEIC quality are independently configurable from 1–100 and default to 80; PNG is lossless; TIFF uses LZW. Name outputs `<source-name>_<region-number>`, adding a numeric suffix on conflicts. Strip GPS/device metadata and normalize orientation to upright.
 - **Dependencies:** 4.1
 - **Verification:** Decode every exported format and confirm dimensions, orientation, color profile, and corrected geometry.
 - **Complexity:** High
@@ -373,7 +373,7 @@ Do not call automatic adjustment APIs or Core Image tone, color, restoration, no
 - **Agent:** `coding-agent`
 - **Location:** `ScanPhotoEditor/Services/PDFExportService.swift`, `ScanPhotoEditor/Views/Export`
 - **Action:** Build one ordered multi-page PDF and an export sheet supporting all or selected regions.
-- **Details:** Use 300-DPI-equivalent page dimensions while preserving each image’s aspect ratio. Default export enables JPEG images and the combined PDF. Provide progress, cancellation, final destination reveal, and per-file failures.
+- **Details:** Use 300-DPI-equivalent page dimensions while preserving each image’s aspect ratio. Embed JPEG-compressed page images using a configurable 1–100 quality that defaults to 80. Default export enables JPEG images and the combined PDF. Provide progress, cancellation, final destination reveal, and per-file failures.
 - **Dependencies:** 4.1, 4.2
 - **Verification:** PDF page count and order match the region list; cancelled exports leave no incomplete files.
 - **Complexity:** High

@@ -95,9 +95,25 @@ struct ExportSheetView: View {
             selectedRegionIDs: selectionMode == .selected
                 ? store.selectedRegionID.map { [$0] }
                 : nil,
-            quality: 0.95
+            jpegQuality: qualityPreference(
+                key: ExportPreferences.jpegQualityKey
+            ),
+            heicQuality: qualityPreference(
+                key: ExportPreferences.heicQualityKey
+            ),
+            pdfQuality: qualityPreference(
+                key: ExportPreferences.pdfQualityKey
+            )
         )
         store.export(to: directory)
+    }
+
+    private func qualityPreference(key: String) -> Double {
+        let defaults = UserDefaults.standard
+        let percent = defaults.object(forKey: key) == nil
+            ? ExportPreferences.defaultQualityPercent
+            : defaults.integer(forKey: key)
+        return ExportPreferences.quality(from: percent)
     }
 }
 

@@ -415,7 +415,7 @@ final class ProjectEditingStore {
                                 let url = try ImageExportService.export(
                                     image: rendered,
                                     format: format,
-                                    quality: options.quality,
+                                    quality: options.quality(for: format),
                                     baseName: baseName,
                                     destinationDirectory: directory
                                 )
@@ -449,6 +449,7 @@ final class ProjectEditingStore {
                 do {
                     let url = try PDFExportService.export(
                         images: pdfImages,
+                        quality: options.pdfQuality,
                         destinationDirectory: directory
                     )
                     report.exportedURLs.append(url)

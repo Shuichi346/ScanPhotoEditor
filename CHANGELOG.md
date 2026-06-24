@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added separate JPEG, HEIC, and PDF image-quality settings, defaulting to 80%.
+- Reduced PDF export size by embedding JPEG-compressed page images instead of raw full-resolution bitmap streams.
 - Fixed the editor workspace unexpectedly switching from a top-and-bottom layout to a side-by-side layout during use.
 - Fixed JPEG thumbnail and export encoding to discard unnecessary alpha data.
 - Improved crop precision by making corner handles transparent and adding red crosshairs.

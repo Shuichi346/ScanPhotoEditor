@@ -67,6 +67,18 @@ final class ImagePipelineTests: XCTestCase {
         )
     }
 
+    func testExportQualityPreferenceIsClampedToSupportedRange() {
+        XCTAssertEqual(
+            ExportPreferences.normalizedQualityPercent(0),
+            ExportPreferences.qualityPercentRange.lowerBound
+        )
+        XCTAssertEqual(
+            ExportPreferences.normalizedQualityPercent(101),
+            ExportPreferences.qualityPercentRange.upperBound
+        )
+        XCTAssertEqual(ExportPreferences.quality(from: 80), 0.8, accuracy: 0.001)
+    }
+
     func testEveryImageExportFormatDecodes() throws {
         let image = try makeTestImage(width: 64, height: 48)
         let directory = FileManager.default.temporaryDirectory
@@ -108,11 +120,17 @@ final class ImagePipelineTests: XCTestCase {
 
         let output = try PDFExportService.export(
             images: [("first", first), ("second", second)],
+            quality: 0.8,
             destinationDirectory: directory
         )
         let document = CGPDFDocument(output as CFURL)
+        let pdfData = try Data(contentsOf: output)
 
         XCTAssertEqual(document?.numberOfPages, 2)
+        XCTAssertTrue(
+            String(decoding: pdfData, as: UTF8.self).contains("/DCTDecode"),
+            "PDF page images should use JPEG compression."
+        )
     }
 
     func testProcessingCoordinatorCompletesOneHundredSmallImages() async throws {

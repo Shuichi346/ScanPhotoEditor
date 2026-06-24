@@ -20,7 +20,7 @@ The Codex Run action invokes the same build script.
 ## Usage
 
 1. Create or open a `.scanphoto` document.
-2. Optionally set **ScanPhotoEditor → Settings → Maximum detections per image**. The default is 1.
+2. Optionally configure detection and JPEG, HEIC, or PDF compression quality in **ScanPhotoEditor → Settings**. Export quality defaults to 80%.
 3. Drop image files or folders anywhere in the document window.
 4. Select detected regions in the sidebar.
 5. Drag corner or edge handles over the source image. Use the toolbar to rotate, flip, add, delete, reset, or rerun detection.
