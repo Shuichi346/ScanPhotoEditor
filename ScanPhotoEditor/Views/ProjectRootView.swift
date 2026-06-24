@@ -174,22 +174,12 @@ private struct EditorWorkspaceView: View {
     let undoManager: UndoManager?
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 0) {
-                sourceEditor
-                    .frame(minWidth: 400)
-                Divider()
-                correctedPreview
-                    .frame(minWidth: 300)
-            }
-
-            VStack(spacing: 0) {
-                sourceEditor
-                    .frame(minHeight: 300)
-                Divider()
-                correctedPreview
-                    .frame(minHeight: 220)
-            }
+        VStack(spacing: 0) {
+            sourceEditor
+                .frame(minHeight: 300)
+            Divider()
+            correctedPreview
+                .frame(minHeight: 220)
         }
     }
 

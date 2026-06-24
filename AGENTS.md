@@ -15,3 +15,4 @@
 - Mark UI tests that use `XCUIApplication` or `XCUIElement` APIs as `@MainActor` under Swift strict concurrency.
 - SwiftUI views that render values from `PhotoProjectDocument.manifest` must observe the document directly; observing only `ProjectEditingStore` does not propagate the document's Combine updates.
 - In `GeometryCanvasView`, derive the rendered image rectangle and scrollable content size from the same zoomed canvas dimensions so the image never extends beyond the scroll bounds.
+- Keep `EditorWorkspaceView` in a stable top-and-bottom layout with the source editor above the corrected preview; do not use content-measurement-driven layout switching such as `ViewThatFits`.

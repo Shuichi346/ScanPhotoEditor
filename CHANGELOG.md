@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fixed the editor workspace unexpectedly switching from a top-and-bottom layout to a side-by-side layout during use.
 - Fixed JPEG thumbnail and export encoding to discard unnecessary alpha data.
 - Improved crop precision by making corner handles transparent and adding red crosshairs.
 - Added undoable filename sorting for imported images, including export and PDF page ordering.

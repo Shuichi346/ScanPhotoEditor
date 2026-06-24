@@ -2,6 +2,8 @@
 
 ## 2026-06-24
 
+- The editor workspace switched layouts because `ViewThatFits` re-evaluated whether its horizontal candidate fit as child measurements changed. `EditorWorkspaceView` now uses a fixed vertical stack for stable source-above-preview presentation.
+- The layout fix passed Xcode diagnostics, Debug build, launch verification, and unit tests. The UI-test runner still exited before establishing its connection when run from `xcodebuild`.
 - JPEG thumbnails and exports now use an opaque RGBX render before ImageIO encoding, preventing the `AlphaPremulLast` warning and avoiding unnecessary decode memory.
 - The full unit and UI test suite passed with normal Xcode signing; disabling code signing caused the UI-test runner to exit before establishing its connection.
 - Crop corner handles were changed from opaque white circles to transparent scope-style controls with red crosshairs; Xcode diagnostics, the full build, and launch verification passed.
