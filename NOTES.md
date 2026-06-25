@@ -2,6 +2,7 @@
 
 ## 2026-06-25
 
+- App version values were moved to `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `project.yml`; `Info.plist` now expands those build settings instead of retaining separate fixed values.
 - The two toolbar trash icons represented different scopes: deleting a region versus removing its entire source. Source-level actions moved into a `photo.stack` menu, region add/delete stayed together, and transform controls were grouped separately in both the toolbar and inspector.
 - Reset-to-full-frame was added to focused Geometry commands, and store-level tests now verify rotate, horizontal flip, vertical flip, and reset mutations. SwiftUI toolbar `Menu` controls must be queried as `XCUIElementQuery.menuButtons` in UI tests.
 - Nested root and sidebar toolbar declarations caused SwiftUI to reflow individual controls as split-view widths changed. Toolbar ownership moved to `ProjectRootView`, with related actions grouped into stable `ControlGroup` units; the inspector-toggle UI regression test passed.

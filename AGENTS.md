@@ -3,6 +3,7 @@
 - Target macOS 26 or later on Apple Silicon with Swift 6.3 strict concurrency.
 - Treat `ScanPhotoEditor.xcodeproj` as the primary build, test, signing, and release format.
 - Regenerate the project from `project.yml` with XcodeGen 2.45.4 after project-setting changes.
+- Change app versions through `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `project.yml`; keep `Info.plist` version keys bound to those build settings.
 - Open the generated project in Xcode and use the Xcode integration for diagnostics after Swift or project edits. `xcodebuild` is the run-script fallback.
 - Keep image processing geometry-only: orientation normalization, perspective correction, explicit quarter-turn rotation, explicit flips, and encoder-required color-profile handling.
 - Never add automatic adjustment, white balance, exposure, contrast, saturation, sharpening, denoising, restoration, OCR, face analysis, or cloud upload code.

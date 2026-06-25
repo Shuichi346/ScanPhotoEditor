@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Centralized the app marketing and build versions in `project.yml` so generated Xcode projects and packaged app metadata remain consistent.
 - Reorganized source, region, and geometry controls into distinct toolbar and inspector groups, removing ambiguous duplicate trash buttons while retaining working menu and command paths for every action.
 - Fixed unstable main-window toolbar layout and kept source sorting available when the inspector or split-view widths change.
 - Added an export completion screen with exported/failed item counts and an “Open in Finder” action.
