@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fixed unstable main-window toolbar layout and kept source sorting available when the inspector or split-view widths change.
 - Added an export completion screen with exported/failed item counts and an “Open in Finder” action.
 - Fixed crashes when creating, saving, or reopening projects caused by forcing SwiftUI document callbacks onto the main actor.
 - Fixed multi-region export crashes, moved full-resolution export off the main actor, and streamed PDF pages to keep memory bounded.

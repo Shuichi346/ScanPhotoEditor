@@ -2,6 +2,7 @@
 
 ## 2026-06-25
 
+- Nested root and sidebar toolbar declarations caused SwiftUI to reflow individual controls as split-view widths changed. Toolbar ownership moved to `ProjectRootView`, with related actions grouped into stable `ControlGroup` units; the inspector-toggle UI regression test passed.
 - The export sheet now transitions from configuration/progress to a completion view after non-cancelled exports, with summary counts and access to the selected destination in Finder. Cancellation remains a separate state.
 - `ReferenceFileDocument` lifecycle callbacks run on non-main queues. `PhotoProjectDocument` must remain nonisolated and `@unchecked Sendable`; using `MainActor.assumeIsolated` in the document factory causes a libdispatch assertion.
 - Originals moved from a document-wide `[String: Data]` cache to app-owned file-backed storage. Immutable save/export snapshots use hard links when possible and copies as a fallback.
