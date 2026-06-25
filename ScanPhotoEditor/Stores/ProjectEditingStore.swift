@@ -17,6 +17,7 @@ final class ProjectEditingStore {
     var exportProgress: Double = 0
     var isExporting = false
     var exportReport: ExportReport?
+    var exportWasCancelled = false
     var sourcePreview: CGImage?
     var correctedPreview: CGImage?
     var confirmationMessage: String?
@@ -504,6 +505,7 @@ final class ProjectEditingStore {
             isExporting = true
             exportProgress = 0
             exportReport = nil
+            exportWasCancelled = false
 
             let progress = AsyncStream.makeStream(of: Double.self)
             let worker = Task.detached(priority: .userInitiated) {
@@ -534,6 +536,7 @@ final class ProjectEditingStore {
                 await progressTask.value
 
                 exportReport = result.report
+                exportWasCancelled = result.cancelled || Task.isCancelled
                 if result.cancelled || Task.isCancelled {
                     document.activityMessage = "Export cancelled."
                 } else {
@@ -551,6 +554,13 @@ final class ProjectEditingStore {
 
     func cancelExport() {
         exportTask?.cancel()
+    }
+
+    func prepareForExportPresentation() {
+        guard !isExporting else { return }
+        exportProgress = 0
+        exportReport = nil
+        exportWasCancelled = false
     }
 
     private var nextImportOrder: Int {

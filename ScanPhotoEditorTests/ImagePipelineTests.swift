@@ -307,6 +307,7 @@ final class ImagePipelineTests: XCTestCase {
         }
 
         XCTAssertFalse(store.isExporting)
+        XCTAssertFalse(store.exportWasCancelled)
         XCTAssertEqual(store.exportProgress, 1, accuracy: 0.000_001)
         let output = try XCTUnwrap(store.exportReport?.exportedURLs.first)
         XCTAssertEqual(CGPDFDocument(output as CFURL)?.numberOfPages, 2)

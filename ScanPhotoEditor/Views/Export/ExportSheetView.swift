@@ -7,8 +7,26 @@ struct ExportSheetView: View {
     @State private var selectedFormats: Set<ExportImageFormat> = [.jpeg]
     @State private var includePDF = true
     @State private var selectionMode = ExportSelectionMode.all
+    @State private var exportDirectory: URL?
 
     var body: some View {
+        Group {
+            if let report = store.exportReport,
+               !store.isExporting,
+               !store.exportWasCancelled {
+                completionView(report: report)
+            } else {
+                exportOptionsView
+            }
+        }
+        .padding(24)
+        .frame(width: 440)
+        .onAppear {
+            store.prepareForExportPresentation()
+        }
+    }
+
+    private var exportOptionsView: some View {
         VStack(alignment: .leading, spacing: 18) {
             Text("Export Photographs")
                 .font(.title2.bold())
@@ -80,8 +98,49 @@ struct ExportSheetView: View {
                 )
             }
         }
-        .padding(24)
-        .frame(width: 440)
+    }
+
+    private func completionView(report: ExportReport) -> some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Label {
+                Text("Export Complete")
+                    .font(.title2.bold())
+            } icon: {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+            }
+
+            Text(completionMessage(report: report))
+                .foregroundStyle(.secondary)
+
+            if !report.failures.isEmpty {
+                GroupBox("Items that could not be exported") {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(report.failures) { failure in
+                                Text("\(failure.item): \(failure.message)")
+                                    .font(.caption)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(6)
+                    }
+                    .frame(maxHeight: 120)
+                }
+            }
+
+            HStack {
+                Spacer()
+                Button("Done") {
+                    dismiss()
+                }
+                Button("Open in Finder") {
+                    openExportLocation(report: report)
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(exportDirectory == nil && report.exportedURLs.isEmpty)
+            }
+        }
     }
 
     private func chooseDestination() {
@@ -95,6 +154,7 @@ struct ExportSheetView: View {
         panel.canCreateDirectories = true
         panel.allowsMultipleSelection = false
         guard panel.runModal() == .OK, let directory = panel.url else { return }
+        exportDirectory = directory
 
         store.exportOptions = ExportOptions(
             formats: selectedFormats,
@@ -113,6 +173,25 @@ struct ExportSheetView: View {
             )
         )
         store.export(to: directory)
+    }
+
+    private func completionMessage(report: ExportReport) -> String {
+        let exportedCount = report.exportedURLs.count
+        let exportedSummary =
+            "\(exportedCount) file\(exportedCount == 1 ? "" : "s") exported."
+        guard !report.failures.isEmpty else {
+            return exportedSummary
+        }
+        let failureCount = report.failures.count
+        return "\(exportedSummary) \(failureCount) item\(failureCount == 1 ? "" : "s") failed."
+    }
+
+    private func openExportLocation(report: ExportReport) {
+        if let exportDirectory {
+            NSWorkspace.shared.open(exportDirectory)
+        } else {
+            NSWorkspace.shared.activateFileViewerSelecting(report.exportedURLs)
+        }
     }
 
     private func qualityPreference(key: String) -> Double {
