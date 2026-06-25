@@ -93,25 +93,35 @@ struct ProjectRootView: View {
     @ToolbarContentBuilder
     private var projectToolbar: some ToolbarContent {
         ToolbarItem(placement: .navigation) {
-            ControlGroup {
-                Button(role: .destructive) {
-                    store.removeSelectedSource(undoManager: undoManager)
+            Menu {
+                Button {
+                    store.rerunDetection(undoManager: undoManager)
                 } label: {
-                    Label("Remove Source", systemImage: "trash")
+                    Label("Rerun Detection", systemImage: "viewfinder")
                 }
-                .help("Remove the selected source image and all its regions")
                 .disabled(store.selectedSource == nil)
-                .accessibilityIdentifier("remove-source")
 
                 Button {
                     store.sortImagesByFileName(undoManager: undoManager)
                 } label: {
                     Label("Sort by File Name", systemImage: "textformat.abc")
                 }
-                .help("Sort images by file name")
                 .disabled(document.manifest.sources.count < 2)
-                .accessibilityIdentifier("sort-images")
+
+                Divider()
+
+                Button(role: .destructive) {
+                    store.removeSelectedSource(undoManager: undoManager)
+                } label: {
+                    Label("Remove Source", systemImage: "trash")
+                }
+                .disabled(store.selectedSource == nil)
+            } label: {
+                Label("Source Actions", systemImage: "photo.stack")
             }
+            .help("Source actions")
+            .disabled(document.manifest.sources.isEmpty)
+            .accessibilityIdentifier("source-actions")
         }
 
         ToolbarItem {
@@ -121,21 +131,18 @@ struct ProjectRootView: View {
                 } label: {
                     Label("Add Region", systemImage: "plus.rectangle.on.rectangle")
                 }
+                .help("Add a region to the selected source")
                 .disabled(store.selectedSource == nil)
+                .accessibilityIdentifier("add-region")
 
-                Button {
+                Button(role: .destructive) {
                     store.deleteSelectedRegion(undoManager: undoManager)
                 } label: {
                     Label("Delete Region", systemImage: "trash")
                 }
+                .help("Delete the selected region")
                 .disabled(store.selectedRegion == nil)
-
-                Button {
-                    store.rerunDetection(undoManager: undoManager)
-                } label: {
-                    Label("Rerun Detection", systemImage: "viewfinder")
-                }
-                .disabled(store.selectedSource == nil)
+                .accessibilityIdentifier("delete-region")
             }
         }
 
@@ -144,17 +151,47 @@ struct ProjectRootView: View {
                 Button {
                     store.rotateClockwise(undoManager: undoManager)
                 } label: {
-                    Label("Rotate", systemImage: "rotate.right")
+                    Label("Rotate Clockwise", systemImage: "rotate.right")
                 }
+                .help("Rotate the selected region clockwise")
                 .disabled(store.selectedRegion == nil)
+                .accessibilityIdentifier("rotate-region")
+
+                Menu {
+                    Button {
+                        store.flipHorizontal(undoManager: undoManager)
+                    } label: {
+                        Label("Flip Horizontal", systemImage: "arrow.left.and.right")
+                    }
+
+                    Button {
+                        store.flipVertical(undoManager: undoManager)
+                    } label: {
+                        Label("Flip Vertical", systemImage: "arrow.up.and.down")
+                    }
+
+                    Divider()
+
+                    Button {
+                        store.resetSelectedRegion(undoManager: undoManager)
+                    } label: {
+                        Label("Reset to Full Frame", systemImage: "arrow.counterclockwise")
+                    }
+                } label: {
+                    Label("More Geometry Actions", systemImage: "ellipsis")
+                }
+                .help("Flip or reset the selected region")
+                .disabled(store.selectedRegion == nil)
+                .accessibilityIdentifier("geometry-actions")
 
                 Button {
                     store.showGrid.toggle()
                 } label: {
-                    Label("Grid", systemImage: "grid")
+                    Label(store.showGrid ? "Hide Grid" : "Show Grid", systemImage: "grid")
                 }
                 .help("Toggle 8×8 grid")
                 .disabled(store.selectedRegion == nil)
+                .accessibilityIdentifier("toggle-grid")
             }
         }
 
@@ -190,6 +227,7 @@ struct ProjectRootView: View {
             rotateClockwise: { store.rotateClockwise(undoManager: undoManager) },
             flipHorizontal: { store.flipHorizontal(undoManager: undoManager) },
             flipVertical: { store.flipVertical(undoManager: undoManager) },
+            resetRegion: { store.resetSelectedRegion(undoManager: undoManager) },
             addRegion: { store.addRegion(undoManager: undoManager) },
             deleteRegion: { store.deleteSelectedRegion(undoManager: undoManager) },
             removeSource: { store.removeSelectedSource(undoManager: undoManager) },

@@ -399,6 +399,33 @@ final class ImportAndManifestTests: XCTestCase {
     }
 
     @MainActor
+    func testGeometryActionsMutateTheSelectedRegion() throws {
+        let document = PhotoProjectDocument()
+        let source = makeSource(displayName: "Source", importOrder: 0, regionCount: 1)
+        document.manifest.sources = [source]
+        document.manifest.regionOrder = source.regions.map(\.id)
+        let store = ProjectEditingStore(document: document)
+
+        store.rotateClockwise(undoManager: nil)
+        store.flipHorizontal(undoManager: nil)
+        store.flipVertical(undoManager: nil)
+
+        let transformed = try XCTUnwrap(store.selectedRegion)
+        XCTAssertEqual(transformed.rotation, .clockwise90)
+        XCTAssertTrue(transformed.flipHorizontal)
+        XCTAssertTrue(transformed.flipVertical)
+
+        store.resetSelectedRegion(undoManager: nil)
+
+        let reset = try XCTUnwrap(store.selectedRegion)
+        XCTAssertEqual(reset.quadrilateral, .fullFrame)
+        XCTAssertEqual(reset.rotation, .zero)
+        XCTAssertFalse(reset.flipHorizontal)
+        XCTAssertFalse(reset.flipVertical)
+        XCTAssertEqual(reset.reviewState, .needsReview)
+    }
+
+    @MainActor
     func testRemovingAndRestoringSourceMovesOriginalOutOfManifest() throws {
         let document = PhotoProjectDocument()
         let source = makeSource(displayName: "Source", importOrder: 0, regionCount: 1)

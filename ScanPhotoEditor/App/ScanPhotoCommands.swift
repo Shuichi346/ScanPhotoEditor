@@ -36,6 +36,11 @@ struct ScanPhotoCommands: Commands {
             }
             .disabled(actions?.canEditRegion != true)
 
+            Button("Reset to Full Frame") {
+                actions?.resetRegion()
+            }
+            .disabled(actions?.canEditRegion != true)
+
             Divider()
 
             Button("Add Region") {
@@ -80,6 +85,7 @@ struct ProjectActions {
     let rotateClockwise: () -> Void
     let flipHorizontal: () -> Void
     let flipVertical: () -> Void
+    let resetRegion: () -> Void
     let addRegion: () -> Void
     let deleteRegion: () -> Void
     let removeSource: () -> Void

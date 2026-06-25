@@ -18,20 +18,43 @@ struct GeometryInspectorView: View {
                 }
 
                 Section("Geometry") {
-                    Button("Rotate Clockwise") {
-                        store.rotateClockwise(undoManager: undoManager)
+                    LabeledContent("Transform") {
+                        ControlGroup {
+                            Button {
+                                store.rotateClockwise(undoManager: undoManager)
+                            } label: {
+                                Label("Rotate Clockwise", systemImage: "rotate.right")
+                            }
+                            .help("Rotate clockwise")
+
+                            Button {
+                                store.flipHorizontal(undoManager: undoManager)
+                            } label: {
+                                Label("Flip Horizontal", systemImage: "arrow.left.and.right")
+                            }
+                            .help("Flip horizontally")
+
+                            Button {
+                                store.flipVertical(undoManager: undoManager)
+                            } label: {
+                                Label("Flip Vertical", systemImage: "arrow.up.and.down")
+                            }
+                            .help("Flip vertically")
+                        }
                     }
-                    Button("Flip Horizontal") {
-                        store.flipHorizontal(undoManager: undoManager)
-                    }
-                    Button("Flip Vertical") {
-                        store.flipVertical(undoManager: undoManager)
-                    }
-                    Button("Reset to Full Frame") {
+
+                    Button {
                         store.resetSelectedRegion(undoManager: undoManager)
+                    } label: {
+                        Label("Reset to Full Frame", systemImage: "arrow.counterclockwise")
                     }
-                    Button("Rerun Detection") {
+                }
+
+                Section("Detection") {
+                    Button {
                         store.rerunDetection(undoManager: undoManager)
+                    } label: {
+                        Label("Rerun Detection", systemImage: "viewfinder")
                     }
                 }
 
