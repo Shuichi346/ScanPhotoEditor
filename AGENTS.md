@@ -13,6 +13,7 @@
 - Use preview-sized images while editing and decode full resolution only for export.
 - Keep imported originals file-backed in `ProjectFileStorage`; do not reintroduce a document-wide in-memory original-data dictionary.
 - Keep PDF export page-streamed so full-resolution corrected images are not accumulated across pages.
+- Keep successful export completion distinct from cancellation; only present the completion view for a finished, non-cancelled export report.
 - Do not isolate `PhotoProjectDocument` or its `ReferenceFileDocument` conformance to `MainActor`; SwiftUI creates, opens, and snapshots reference documents on non-main queues.
 - Before encoding JPEG thumbnails or exports with ImageIO, render opaque images as RGBX so the encoder does not receive an unnecessary alpha channel.
 - Mark UI tests that use `XCUIApplication` or `XCUIElement` APIs as `@MainActor` under Swift strict concurrency.

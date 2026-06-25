@@ -2,6 +2,7 @@
 
 ## 2026-06-25
 
+- The export sheet now transitions from configuration/progress to a completion view after non-cancelled exports, with summary counts and access to the selected destination in Finder. Cancellation remains a separate state.
 - `ReferenceFileDocument` lifecycle callbacks run on non-main queues. `PhotoProjectDocument` must remain nonisolated and `@unchecked Sendable`; using `MainActor.assumeIsolated` in the document factory causes a libdispatch assertion.
 - Originals moved from a document-wide `[String: Data]` cache to app-owned file-backed storage. Immutable save/export snapshots use hard links when possible and copies as a fallback.
 - Folder imports now copy each supported file while the submitted security-scoped URL remains active. Processing receives staged URLs and publishes each completed source immediately.

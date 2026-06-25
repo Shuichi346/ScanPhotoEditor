@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added an export completion screen with exported/failed item counts and an “Open in Finder” action.
 - Fixed crashes when creating, saving, or reopening projects caused by forcing SwiftUI document callbacks onto the main actor.
 - Fixed multi-region export crashes, moved full-resolution export off the main actor, and streamed PDF pages to keep memory bounded.
 - Changed project originals to file-backed temporary storage and copied imports while security-scoped access remains active.
