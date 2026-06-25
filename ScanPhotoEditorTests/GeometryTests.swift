@@ -109,4 +109,38 @@ final class GeometryTests: XCTestCase {
         XCTAssertEqual(roundTrip.x, normalized.x, accuracy: 0.000_001)
         XCTAssertEqual(roundTrip.y, normalized.y, accuracy: 0.000_001)
     }
+
+    func testCorrectedPreviewLayoutScalesFromFitSizeAndKeepsImageScrollable() {
+        let sourceImageSize = CGSize(width: 1_200, height: 800)
+        let viewportSize = CGSize(width: 600, height: 400)
+        let fitLayout = CorrectedPreviewLayout(
+            sourceImageSize: sourceImageSize,
+            viewportSize: viewportSize,
+            zoom: 1
+        )
+        let zoomedLayout = CorrectedPreviewLayout(
+            sourceImageSize: sourceImageSize,
+            viewportSize: viewportSize,
+            zoom: 3
+        )
+
+        XCTAssertLessThanOrEqual(
+            fitLayout.imageSize.width,
+            viewportSize.width - CorrectedPreviewLayout.contentPadding * 2
+        )
+        XCTAssertLessThanOrEqual(
+            fitLayout.imageSize.height,
+            viewportSize.height - CorrectedPreviewLayout.contentPadding * 2
+        )
+        XCTAssertEqual(zoomedLayout.imageSize.width, fitLayout.imageSize.width * 3, accuracy: 0.001)
+        XCTAssertEqual(zoomedLayout.imageSize.height, fitLayout.imageSize.height * 3, accuracy: 0.001)
+        XCTAssertGreaterThanOrEqual(
+            zoomedLayout.contentSize.width,
+            zoomedLayout.imageSize.width + CorrectedPreviewLayout.contentPadding * 2
+        )
+        XCTAssertGreaterThanOrEqual(
+            zoomedLayout.contentSize.height,
+            zoomedLayout.imageSize.height + CorrectedPreviewLayout.contentPadding * 2
+        )
+    }
 }
