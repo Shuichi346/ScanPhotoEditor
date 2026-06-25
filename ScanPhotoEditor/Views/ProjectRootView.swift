@@ -92,44 +92,70 @@ struct ProjectRootView: View {
 
     @ToolbarContentBuilder
     private var projectToolbar: some ToolbarContent {
-        ToolbarItemGroup {
-            Button {
-                store.addRegion(undoManager: undoManager)
-            } label: {
-                Label("Add Region", systemImage: "plus.rectangle.on.rectangle")
-            }
-            .disabled(store.selectedSource == nil)
+        ToolbarItem(placement: .navigation) {
+            ControlGroup {
+                Button(role: .destructive) {
+                    store.removeSelectedSource(undoManager: undoManager)
+                } label: {
+                    Label("Remove Source", systemImage: "trash")
+                }
+                .help("Remove the selected source image and all its regions")
+                .disabled(store.selectedSource == nil)
+                .accessibilityIdentifier("remove-source")
 
-            Button {
-                store.deleteSelectedRegion(undoManager: undoManager)
-            } label: {
-                Label("Delete Region", systemImage: "trash")
+                Button {
+                    store.sortImagesByFileName(undoManager: undoManager)
+                } label: {
+                    Label("Sort by File Name", systemImage: "textformat.abc")
+                }
+                .help("Sort images by file name")
+                .disabled(document.manifest.sources.count < 2)
+                .accessibilityIdentifier("sort-images")
             }
-            .disabled(store.selectedRegion == nil)
-
-            Button {
-                store.rerunDetection(undoManager: undoManager)
-            } label: {
-                Label("Rerun Detection", systemImage: "viewfinder")
-            }
-            .disabled(store.selectedSource == nil)
         }
 
-        ToolbarItemGroup {
-            Button {
-                store.rotateClockwise(undoManager: undoManager)
-            } label: {
-                Label("Rotate", systemImage: "rotate.right")
-            }
-            .disabled(store.selectedRegion == nil)
+        ToolbarItem {
+            ControlGroup {
+                Button {
+                    store.addRegion(undoManager: undoManager)
+                } label: {
+                    Label("Add Region", systemImage: "plus.rectangle.on.rectangle")
+                }
+                .disabled(store.selectedSource == nil)
 
-            Button {
-                store.showGrid.toggle()
-            } label: {
-                Label("Grid", systemImage: "grid")
+                Button {
+                    store.deleteSelectedRegion(undoManager: undoManager)
+                } label: {
+                    Label("Delete Region", systemImage: "trash")
+                }
+                .disabled(store.selectedRegion == nil)
+
+                Button {
+                    store.rerunDetection(undoManager: undoManager)
+                } label: {
+                    Label("Rerun Detection", systemImage: "viewfinder")
+                }
+                .disabled(store.selectedSource == nil)
             }
-            .help("Toggle 8×8 grid")
-            .disabled(store.selectedRegion == nil)
+        }
+
+        ToolbarItem {
+            ControlGroup {
+                Button {
+                    store.rotateClockwise(undoManager: undoManager)
+                } label: {
+                    Label("Rotate", systemImage: "rotate.right")
+                }
+                .disabled(store.selectedRegion == nil)
+
+                Button {
+                    store.showGrid.toggle()
+                } label: {
+                    Label("Grid", systemImage: "grid")
+                }
+                .help("Toggle 8×8 grid")
+                .disabled(store.selectedRegion == nil)
+            }
         }
 
         ToolbarItem(placement: .primaryAction) {
@@ -147,6 +173,7 @@ struct ProjectRootView: View {
             } label: {
                 Label("Inspector", systemImage: "sidebar.right")
             }
+            .accessibilityIdentifier("toggle-inspector")
         }
     }
 

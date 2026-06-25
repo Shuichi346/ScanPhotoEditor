@@ -46,26 +46,6 @@ struct ProjectSidebarView: View {
         }
         .listStyle(.sidebar)
         .navigationTitle("Photographs")
-        .toolbar {
-            ToolbarItem {
-                Button(role: .destructive) {
-                    store.removeSelectedSource(undoManager: undoManager)
-                } label: {
-                    Label("Remove Source", systemImage: "trash")
-                }
-                .help("Remove the selected source image and all its regions")
-                .disabled(store.selectedSource == nil)
-            }
-            ToolbarItem {
-                Button {
-                    store.sortImagesByFileName(undoManager: undoManager)
-                } label: {
-                    Label("Sort by File Name", systemImage: "textformat.abc")
-                }
-                .help("Sort images by file name")
-                .disabled(document.manifest.sources.count < 2)
-            }
-        }
         .onChange(of: store.selectedRegionID) {
             store.select(regionID: store.selectedRegionID)
         }
