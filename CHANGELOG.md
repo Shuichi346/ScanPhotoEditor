@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Reorganized source, region, and geometry controls into distinct toolbar and inspector groups, removing ambiguous duplicate trash buttons while retaining working menu and command paths for every action.
 - Fixed unstable main-window toolbar layout and kept source sorting available when the inspector or split-view widths change.
 - Added an export completion screen with exported/failed item counts and an “Open in Finder” action.
 - Fixed crashes when creating, saving, or reopening projects caused by forcing SwiftUI document callbacks onto the main actor.

@@ -21,3 +21,4 @@
 - In `GeometryCanvasView`, derive the rendered image rectangle and scrollable content size from the same zoomed canvas dimensions so the image never extends beyond the scroll bounds.
 - Keep `EditorWorkspaceView` in a stable top-and-bottom layout with the source editor above the corrected preview; do not use content-measurement-driven layout switching such as `ViewThatFits`.
 - Define main-window toolbar content only in `ProjectRootView`; do not add competing toolbar declarations to split-view child views. Group related controls with `ControlGroup` so sidebar and inspector width changes do not independently overflow actions.
+- Keep source-wide actions in the Source Actions menu, region creation/deletion in their own `ControlGroup`, and transforms in the geometry group; do not expose source removal and region deletion as adjacent, indistinguishable trash buttons.
