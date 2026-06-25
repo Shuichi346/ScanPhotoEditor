@@ -38,9 +38,6 @@ struct GeometryInspectorView: View {
                 Section("Display") {
                     @Bindable var store = store
                     Toggle("8×8 Grid", isOn: $store.showGrid)
-                    Slider(value: $store.zoom, in: 0.5 ... 3) {
-                        Text("Zoom")
-                    }
                 }
 
                 Section {
@@ -59,4 +56,3 @@ struct GeometryInspectorView: View {
         .padding(.vertical, 8)
     }
 }
-
