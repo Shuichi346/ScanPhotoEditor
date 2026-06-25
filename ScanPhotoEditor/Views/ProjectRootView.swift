@@ -50,14 +50,13 @@ struct ProjectRootView: View {
             "Rerun Detection?",
             isPresented: Binding(
                 get: { store.confirmationMessage != nil },
-                set: { if !$0 { store.confirmationMessage = nil } }
+                set: { if !$0 { store.cancelRerunDetectionConfirmation() } }
             )
         ) {
             Button("Cancel", role: .cancel) {
-                store.confirmationMessage = nil
+                store.cancelRerunDetectionConfirmation()
             }
             Button("Replace Regions", role: .destructive) {
-                store.confirmationMessage = nil
                 store.rerunDetection(force: true, undoManager: undoManager)
             }
         } message: {
@@ -154,15 +153,19 @@ struct ProjectRootView: View {
     private var projectActions: ProjectActions {
         ProjectActions(
             export: { store.isExportPresented = true },
+            canExport: !store.orderedRegions.isEmpty,
             sortImagesByFileName: {
                 store.sortImagesByFileName(undoManager: undoManager)
             },
             canSortImages: document.manifest.sources.count > 1,
+            canEditSource: store.selectedSource != nil,
+            canEditRegion: store.selectedRegion != nil,
             rotateClockwise: { store.rotateClockwise(undoManager: undoManager) },
             flipHorizontal: { store.flipHorizontal(undoManager: undoManager) },
             flipVertical: { store.flipVertical(undoManager: undoManager) },
             addRegion: { store.addRegion(undoManager: undoManager) },
             deleteRegion: { store.deleteSelectedRegion(undoManager: undoManager) },
+            removeSource: { store.removeSelectedSource(undoManager: undoManager) },
             rerunDetection: { store.rerunDetection(undoManager: undoManager) },
             toggleGrid: { store.showGrid.toggle() }
         )

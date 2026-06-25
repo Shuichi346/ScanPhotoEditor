@@ -73,7 +73,11 @@ struct ExportSheetView: View {
                     chooseDestination()
                 }
                 .keyboardShortcut(.defaultAction)
-                .disabled((selectedFormats.isEmpty && !includePDF) || store.isExporting)
+                .disabled(
+                    (selectedFormats.isEmpty && !includePDF)
+                        || store.isExporting
+                        || (selectionMode == .selected && store.selectedRegionID == nil)
+                )
             }
         }
         .padding(24)
@@ -81,6 +85,9 @@ struct ExportSheetView: View {
     }
 
     private func chooseDestination() {
+        guard selectionMode != .selected || store.selectedRegionID != nil else {
+            return
+        }
         let panel = NSOpenPanel()
         panel.title = "Choose Export Folder"
         panel.canChooseDirectories = true

@@ -1,5 +1,14 @@
 # Engineering Notes
 
+## 2026-06-25
+
+- `ReferenceFileDocument` lifecycle callbacks run on non-main queues. `PhotoProjectDocument` must remain nonisolated and `@unchecked Sendable`; using `MainActor.assumeIsolated` in the document factory causes a libdispatch assertion.
+- Originals moved from a document-wide `[String: Data]` cache to app-owned file-backed storage. Immutable save/export snapshots use hard links when possible and copies as a fallback.
+- Folder imports now copy each supported file while the submitted security-scoped URL remains active. Processing receives staged URLs and publishes each completed source immediately.
+- Export work runs in a detached task. Image exports retain only one rendered image at a time, and PDF export renders pages on demand with cancellation and partial-file cleanup.
+- Save snapshots normalize a local manifest copy and clone file references before nonisolated package encoding.
+- Manifest decode/encode now rejects duplicate or mismatched IDs, invalid geometry, incomplete region order, and missing originals. Missing thumbnails are regenerated.
+
 ## 2026-06-24
 
 - The editor workspace switched layouts because `ViewThatFits` re-evaluated whether its horizontal candidate fit as child measurements changed. `EditorWorkspaceView` now uses a fixed vertical stack for stable source-above-preview presentation.
@@ -14,7 +23,6 @@
 - The source canvas applied zoom independently to its minimum frame and rendered image, allowing the image to extend beyond the measured scroll bounds. `GeometryCanvasLayout` now derives both from one explicit zoomed canvas size.
 - Crop previews updated correctly, but source-canvas guidelines stayed stale because the canvas observed the editing store while geometry lived in the document's published manifest. `GeometryCanvasView` now observes `PhotoProjectDocument` directly.
 - The application uses a package-based `ReferenceFileDocument`.
-- Originals are retained as bytes in document state so unsaved imports can be written into a new package.
 - Geometry uses normalized top-left-origin coordinates throughout the model and UI.
 - Detection uses Vision `DetectRectanglesRequest`; rendering uses only Core Image perspective correction plus explicit user transformations.
 - Processing concurrency is bounded to two source images.

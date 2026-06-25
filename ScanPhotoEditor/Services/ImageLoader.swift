@@ -30,8 +30,65 @@ struct ImageMetadata: Sendable {
 
 enum ImageLoader {
     static func metadata(data: Data) throws -> ImageMetadata {
-        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
-              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
+            throw ImageLoadingError.unsupportedImage
+        }
+        return try metadata(source: source)
+    }
+
+    static func metadata(url: URL) throws -> ImageMetadata {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else {
+            throw ImageLoadingError.unsupportedImage
+        }
+        return try metadata(source: source)
+    }
+
+    static func loadUprightImage(data: Data, maximumDimension: Int? = nil) throws -> LoadedImage {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
+            throw ImageLoadingError.unsupportedImage
+        }
+        let orientedImage = CIImage(
+            data: data,
+            options: [.applyOrientationProperty: true]
+        )
+        return try loadUprightImage(
+            source: source,
+            orientedImage: orientedImage,
+            maximumDimension: maximumDimension
+        )
+    }
+
+    static func loadUprightImage(url: URL, maximumDimension: Int? = nil) throws -> LoadedImage {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else {
+            throw ImageLoadingError.unsupportedImage
+        }
+        let orientedImage = CIImage(
+            contentsOf: url,
+            options: [.applyOrientationProperty: true]
+        )
+        return try loadUprightImage(
+            source: source,
+            orientedImage: orientedImage,
+            maximumDimension: maximumDimension
+        )
+    }
+
+    static func jpegThumbnail(data: Data, maximumDimension: Int = 512) throws -> Data {
+        let loaded = try loadUprightImage(data: data, maximumDimension: maximumDimension)
+        return try jpegData(from: loaded.image)
+    }
+
+    static func jpegThumbnail(url: URL, maximumDimension: Int = 512) throws -> Data {
+        let loaded = try loadUprightImage(url: url, maximumDimension: maximumDimension)
+        return try jpegData(from: loaded.image)
+    }
+
+    static func typeIdentifier(for url: URL) -> String? {
+        UTType(filenameExtension: url.pathExtension)?.identifier
+    }
+
+    private static func metadata(source: CGImageSource) throws -> ImageMetadata {
+        guard let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
               let width = properties[kCGImagePropertyPixelWidth] as? NSNumber,
               let height = properties[kCGImagePropertyPixelHeight] as? NSNumber
         else {
@@ -48,11 +105,11 @@ enum ImageLoader {
         )
     }
 
-    static func loadUprightImage(data: Data, maximumDimension: Int? = nil) throws -> LoadedImage {
-        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
-            throw ImageLoadingError.unsupportedImage
-        }
-
+    private static func loadUprightImage(
+        source: CGImageSource,
+        orientedImage: CIImage?,
+        maximumDimension: Int?
+    ) throws -> LoadedImage {
         let image: CGImage?
         if let maximumDimension {
             let options: [CFString: Any] = [
@@ -63,17 +120,14 @@ enum ImageLoader {
             ]
             image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
         } else {
-            guard let ciImage = CIImage(
-                data: data,
-                options: [.applyOrientationProperty: true]
-            ) else {
+            guard let orientedImage else {
                 throw ImageLoadingError.decodingFailed
             }
             image = ImageRenderingContext.shared.createCGImage(
-                ciImage,
-                from: ciImage.extent.integral,
+                orientedImage,
+                from: orientedImage.extent.integral,
                 format: .RGBA8,
-                colorSpace: ciImage.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)
+                colorSpace: orientedImage.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)
             )
         }
 
@@ -86,9 +140,8 @@ enum ImageLoader {
         )
     }
 
-    static func jpegThumbnail(data: Data, maximumDimension: Int = 512) throws -> Data {
-        let loaded = try loadUprightImage(data: data, maximumDimension: maximumDimension)
-        guard let opaqueImage = ImageRenderingContext.opaqueImage(from: loaded.image) else {
+    private static func jpegData(from image: CGImage) throws -> Data {
+        guard let opaqueImage = ImageRenderingContext.opaqueImage(from: image) else {
             throw ImageLoadingError.encodingFailed
         }
         let result = NSMutableData()
@@ -111,10 +164,6 @@ enum ImageLoader {
             throw ImageLoadingError.encodingFailed
         }
         return result as Data
-    }
-
-    static func typeIdentifier(for url: URL) -> String? {
-        UTType(filenameExtension: url.pathExtension)?.identifier
     }
 }
 

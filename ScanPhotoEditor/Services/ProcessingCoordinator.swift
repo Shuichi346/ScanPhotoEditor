@@ -8,41 +8,86 @@ struct ProcessedImport: Sendable {
 }
 
 actor ProcessingCoordinator {
-    private var isCancelled = false
+    private var activeTask: Task<Int, Never>?
+    private var activeID: UUID?
 
     func cancel() {
-        isCancelled = true
+        activeTask?.cancel()
+        activeTask = nil
+        activeID = nil
     }
 
     func process(
         images: [ImportedImage],
         startingImportOrder: Int,
-        maximumDetections: Int
-    ) async -> [ProcessedImport] {
-        isCancelled = false
+        maximumDetections: Int,
+        onProcessed: @escaping @MainActor @Sendable (
+            _ item: ProcessedImport,
+            _ completed: Int,
+            _ total: Int
+        ) -> Void
+    ) async -> Int {
+        activeTask?.cancel()
+        let taskID = UUID()
+        let task = Task.detached(priority: .userInitiated) {
+            await Self.run(
+                images: images,
+                startingImportOrder: startingImportOrder,
+                maximumDetections: maximumDetections,
+                onProcessed: onProcessed
+            )
+        }
+        activeTask = task
+        activeID = taskID
+        let completed = await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
+        if activeID == taskID {
+            activeTask = nil
+            activeID = nil
+        }
+        return completed
+    }
+
+    private static func run(
+        images: [ImportedImage],
+        startingImportOrder: Int,
+        maximumDetections: Int,
+        onProcessed: @escaping @MainActor @Sendable (
+            _ item: ProcessedImport,
+            _ completed: Int,
+            _ total: Int
+        ) -> Void
+    ) async -> Int {
         var iterator = images.enumerated().makeIterator()
-        var results: [ProcessedImport] = []
+        var completed = 0
 
         await withTaskGroup(of: ProcessedImport?.self) { group in
             for _ in 0 ..< min(2, images.count) {
-                if let item = iterator.next() {
-                    group.addTask {
-                        await Self.processOne(
-                            item.element,
-                            importOrder: startingImportOrder + item.offset,
-                            maximumDetections: maximumDetections
-                        )
-                    }
+                guard !Task.isCancelled, let item = iterator.next() else { break }
+                group.addTask {
+                    await processOne(
+                        item.element,
+                        importOrder: startingImportOrder + item.offset,
+                        maximumDetections: maximumDetections
+                    )
                 }
             }
 
             while let result = await group.next() {
-                if let result {
-                    results.append(result)
+                if Task.isCancelled {
+                    group.cancelAll()
+                    break
                 }
-                guard !isCancelled, let item = iterator.next() else { continue }
+                if let result {
+                    completed += 1
+                    await onProcessed(result, completed, images.count)
+                }
+                guard let item = iterator.next() else { continue }
                 group.addTask {
-                    await Self.processOne(
+                    await processOne(
                         item.element,
                         importOrder: startingImportOrder + item.offset,
                         maximumDetections: maximumDetections
@@ -50,7 +95,7 @@ actor ProcessingCoordinator {
                 }
             }
         }
-        return results.sorted { $0.source.importOrder < $1.source.importOrder }
+        return completed
     }
 
     private static func processOne(
@@ -58,53 +103,26 @@ actor ProcessingCoordinator {
         importOrder: Int,
         maximumDetections: Int
     ) async -> ProcessedImport? {
+        guard !Task.isCancelled else { return nil }
         let sourceID = UUID()
         let fileExtension = imported.url.pathExtension.lowercased()
         let storedFilename = "\(sourceID.uuidString).\(fileExtension)"
 
         do {
-            let metadata = try ImageLoader.metadata(data: imported.data)
+            let metadata = try ImageLoader.metadata(url: imported.localURL)
+            try Task.checkCancellation()
             let detectionImage = try ImageLoader.loadUprightImage(
-                data: imported.data,
+                url: imported.localURL,
                 maximumDimension: 2_048
             )
-            let thumbnailData = try? ImageLoader.jpegThumbnail(data: imported.data)
+            try Task.checkCancellation()
+            let thumbnailData = try? ImageLoader.jpegThumbnail(url: imported.localURL)
             let candidates = try await RectangleDetectionService.detect(
                 in: detectionImage.image,
                 maximumDetections: maximumDetections
             )
-            let regions: [PhotoRegion]
-            if candidates.isEmpty {
-                regions = [
-                    PhotoRegion(
-                        id: UUID(),
-                        sourceID: sourceID,
-                        quadrilateral: .fullFrame,
-                        origin: .fallback,
-                        reviewState: .needsReview,
-                        rotation: .zero,
-                        flipHorizontal: false,
-                        flipVertical: false,
-                        order: 0,
-                        isManuallyEdited: false
-                    )
-                ]
-            } else {
-                regions = candidates.enumerated().map { index, candidate in
-                    PhotoRegion(
-                        id: UUID(),
-                        sourceID: sourceID,
-                        quadrilateral: candidate.quadrilateral,
-                        origin: .automatic,
-                        reviewState: .ready,
-                        rotation: .zero,
-                        flipHorizontal: false,
-                        flipVertical: false,
-                        order: index,
-                        isManuallyEdited: false
-                    )
-                }
-            }
+            try Task.checkCancellation()
+            let regions = makeRegions(candidates: candidates, sourceID: sourceID)
             let source = SourceAsset(
                 id: sourceID,
                 displayName: imported.url.deletingPathExtension().lastPathComponent,
@@ -122,23 +140,49 @@ actor ProcessingCoordinator {
                 source: source,
                 thumbnailData: thumbnailData
             )
+        } catch is CancellationError {
+            return nil
         } catch {
+            let metadata = try? ImageLoader.metadata(url: imported.localURL)
             let source = SourceAsset(
                 id: sourceID,
                 displayName: imported.url.deletingPathExtension().lastPathComponent,
                 storedFilename: storedFilename,
-                typeIdentifier: imported.typeIdentifier,
-                pixelWidth: 0,
-                pixelHeight: 0,
+                typeIdentifier: metadata?.typeIdentifier ?? imported.typeIdentifier,
+                pixelWidth: Int(metadata?.uprightPixelSize.width ?? 0),
+                pixelHeight: Int(metadata?.uprightPixelSize.height ?? 0),
                 importOrder: importOrder,
                 processingState: .failed,
                 processingError: error.localizedDescription,
-                regions: []
+                regions: makeRegions(candidates: [], sourceID: sourceID)
             )
             return ProcessedImport(
                 importedImage: imported,
                 source: source,
-                thumbnailData: nil
+                thumbnailData: try? ImageLoader.jpegThumbnail(url: imported.localURL)
+            )
+        }
+    }
+
+    private static func makeRegions(
+        candidates: [DetectionCandidate],
+        sourceID: UUID
+    ) -> [PhotoRegion] {
+        let values = candidates.isEmpty
+            ? [(NormalizedQuadrilateral.fullFrame, RegionOrigin.fallback, ReviewState.needsReview)]
+            : candidates.map { ($0.quadrilateral, .automatic, .ready) }
+        return values.enumerated().map { index, value in
+            PhotoRegion(
+                id: UUID(),
+                sourceID: sourceID,
+                quadrilateral: value.0,
+                origin: value.1,
+                reviewState: value.2,
+                rotation: .zero,
+                flipHorizontal: false,
+                flipVertical: false,
+                order: index,
+                isManuallyEdited: false
             )
         }
     }

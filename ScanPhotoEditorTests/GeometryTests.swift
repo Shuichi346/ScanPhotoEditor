@@ -35,6 +35,59 @@ final class GeometryTests: XCTestCase {
         XCTAssertFalse(quadrilateral.isValid())
     }
 
+    func testRejectsConcaveQuadrilateral() {
+        let quadrilateral = NormalizedQuadrilateral(
+            topLeft: NormalizedPoint(x: 0.1, y: 0.1),
+            topRight: NormalizedPoint(x: 0.9, y: 0.1),
+            bottomRight: NormalizedPoint(x: 0.45, y: 0.45),
+            bottomLeft: NormalizedPoint(x: 0.1, y: 0.9)
+        )
+
+        XCTAssertFalse(quadrilateral.isValid())
+    }
+
+    func testRejectsCollapsedEdge() {
+        let quadrilateral = NormalizedQuadrilateral(
+            topLeft: NormalizedPoint(x: 0.1, y: 0.1),
+            topRight: NormalizedPoint(x: 0.105, y: 0.1),
+            bottomRight: NormalizedPoint(x: 0.9, y: 0.9),
+            bottomLeft: NormalizedPoint(x: 0.1, y: 0.9)
+        )
+
+        XCTAssertFalse(quadrilateral.isValid())
+    }
+
+    func testRejectsSemanticallySwappedTopCorners() {
+        let quadrilateral = NormalizedQuadrilateral(
+            topLeft: NormalizedPoint(x: 0.9, y: 0.1),
+            topRight: NormalizedPoint(x: 0.1, y: 0.1),
+            bottomRight: NormalizedPoint(x: 0.9, y: 0.9),
+            bottomLeft: NormalizedPoint(x: 0.1, y: 0.9)
+        )
+
+        XCTAssertFalse(quadrilateral.isValid())
+    }
+
+    func testPolygonIoUDistinguishesTiltedRegionsWithIdenticalBoundingBoxes() {
+        let first = NormalizedQuadrilateral(
+            topLeft: NormalizedPoint(x: 0, y: 0),
+            topRight: NormalizedPoint(x: 0.6, y: 0),
+            bottomRight: NormalizedPoint(x: 1, y: 1),
+            bottomLeft: NormalizedPoint(x: 0.4, y: 1)
+        )
+        let second = NormalizedQuadrilateral(
+            topLeft: NormalizedPoint(x: 0.4, y: 0),
+            topRight: NormalizedPoint(x: 1, y: 0),
+            bottomRight: NormalizedPoint(x: 0.6, y: 1),
+            bottomLeft: NormalizedPoint(x: 0, y: 1)
+        )
+
+        XCTAssertTrue(first.isValid())
+        XCTAssertTrue(second.isValid())
+        XCTAssertEqual(first.boundingBoxIntersectionOverUnion(with: second), 1)
+        XCTAssertLessThan(first.intersectionOverUnion(with: second), 0.8)
+    }
+
     func testCornerMoveClampsToBounds() {
         let moved = NormalizedQuadrilateral.centered.moving(
             corner: .topLeft,
@@ -57,4 +110,3 @@ final class GeometryTests: XCTestCase {
         XCTAssertEqual(roundTrip.y, normalized.y, accuracy: 0.000_001)
     }
 }
-

@@ -9,7 +9,7 @@ struct ScanPhotoCommands: Commands {
                 actions?.export()
             }
             .keyboardShortcut("e", modifiers: [.command, .shift])
-            .disabled(actions == nil)
+            .disabled(actions?.canExport != true)
         }
 
         CommandMenu("Arrange") {
@@ -24,17 +24,17 @@ struct ScanPhotoCommands: Commands {
                 actions?.rotateClockwise()
             }
             .keyboardShortcut("r", modifiers: [.command])
-            .disabled(actions == nil)
+            .disabled(actions?.canEditRegion != true)
 
             Button("Flip Horizontal") {
                 actions?.flipHorizontal()
             }
-            .disabled(actions == nil)
+            .disabled(actions?.canEditRegion != true)
 
             Button("Flip Vertical") {
                 actions?.flipVertical()
             }
-            .disabled(actions == nil)
+            .disabled(actions?.canEditRegion != true)
 
             Divider()
 
@@ -42,38 +42,47 @@ struct ScanPhotoCommands: Commands {
                 actions?.addRegion()
             }
             .keyboardShortcut("n", modifiers: [.command, .option])
-            .disabled(actions == nil)
+            .disabled(actions?.canEditSource != true)
 
             Button("Delete Region") {
                 actions?.deleteRegion()
             }
             .keyboardShortcut(.delete, modifiers: [])
-            .disabled(actions == nil)
+            .disabled(actions?.canEditRegion != true)
+
+            Button("Remove Source") {
+                actions?.removeSource()
+            }
+            .disabled(actions?.canEditSource != true)
 
             Button("Rerun Detection") {
                 actions?.rerunDetection()
             }
             .keyboardShortcut("d", modifiers: [.command, .shift])
-            .disabled(actions == nil)
+            .disabled(actions?.canEditSource != true)
 
             Button("Toggle Grid") {
                 actions?.toggleGrid()
             }
             .keyboardShortcut("g", modifiers: [.command])
-            .disabled(actions == nil)
+            .disabled(actions?.canEditRegion != true)
         }
     }
 }
 
 struct ProjectActions {
     let export: () -> Void
+    let canExport: Bool
     let sortImagesByFileName: () -> Void
     let canSortImages: Bool
+    let canEditSource: Bool
+    let canEditRegion: Bool
     let rotateClockwise: () -> Void
     let flipHorizontal: () -> Void
     let flipVertical: () -> Void
     let addRegion: () -> Void
     let deleteRegion: () -> Void
+    let removeSource: () -> Void
     let rerunDetection: () -> Void
     let toggleGrid: () -> Void
 }

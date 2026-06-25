@@ -18,7 +18,7 @@ struct ProjectSidebarView: View {
         List(selection: $store.selectedRegionID) {
             ForEach(document.manifest.sources.sorted(by: { $0.importOrder < $1.importOrder })) { source in
                 Section(source.displayName) {
-                    ForEach(source.regions) { region in
+                    ForEach(store.orderedRegions(for: source.id)) { region in
                         SidebarRegionRow(
                             source: source,
                             region: region,
@@ -26,15 +26,36 @@ struct ProjectSidebarView: View {
                         )
                         .tag(region.id)
                     }
+                    .onMove { offsets, destination in
+                        store.moveRegions(
+                            in: source.id,
+                            from: offsets,
+                            to: destination,
+                            undoManager: undoManager
+                        )
+                    }
                 }
             }
             .onMove { offsets, destination in
-                store.moveRegions(from: offsets, to: destination, undoManager: undoManager)
+                store.moveSources(
+                    from: offsets,
+                    to: destination,
+                    undoManager: undoManager
+                )
             }
         }
         .listStyle(.sidebar)
         .navigationTitle("Photographs")
         .toolbar {
+            ToolbarItem {
+                Button(role: .destructive) {
+                    store.removeSelectedSource(undoManager: undoManager)
+                } label: {
+                    Label("Remove Source", systemImage: "trash")
+                }
+                .help("Remove the selected source image and all its regions")
+                .disabled(store.selectedSource == nil)
+            }
             ToolbarItem {
                 Button {
                     store.sortImagesByFileName(undoManager: undoManager)

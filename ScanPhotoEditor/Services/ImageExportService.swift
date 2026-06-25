@@ -41,6 +41,12 @@ enum ImageExportService {
         )
         let temporaryURL = outputURL.appendingPathExtension("partial")
         try? FileManager.default.removeItem(at: temporaryURL)
+        var succeeded = false
+        defer {
+            if !succeeded {
+                try? FileManager.default.removeItem(at: temporaryURL)
+            }
+        }
 
         guard let destination = CGImageDestinationCreateWithURL(
             temporaryURL as CFURL,
@@ -64,10 +70,10 @@ enum ImageExportService {
         }
         CGImageDestinationAddImage(destination, encodedImage, properties as CFDictionary)
         guard CGImageDestinationFinalize(destination) else {
-            try? FileManager.default.removeItem(at: temporaryURL)
             throw ImageExportError.finalizationFailed
         }
         try FileManager.default.moveItem(at: temporaryURL, to: outputURL)
+        succeeded = true
         return outputURL
     }
 

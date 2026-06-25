@@ -22,7 +22,9 @@ final class ProjectEditingStore {
     var confirmationMessage: String?
 
     private let processingCoordinator = ProcessingCoordinator()
+    private var pendingDetectionSourceID: UUID?
     private var importTask: Task<Void, Never>?
+    private var rerunTask: Task<Void, Never>?
     private var exportTask: Task<Void, Never>?
 
     init(document: PhotoProjectDocument) {
@@ -33,7 +35,8 @@ final class ProjectEditingStore {
 
     var selectedSource: SourceAsset? {
         guard let selectedRegionID else {
-            return document.manifest.sources.first
+            return document.manifest.sources
+                .min(by: { $0.importOrder < $1.importOrder })
         }
         return document.manifest.sources.first {
             $0.regions.contains(where: { $0.id == selectedRegionID })
@@ -49,11 +52,19 @@ final class ProjectEditingStore {
     }
 
     var orderedRegions: [(source: SourceAsset, region: PhotoRegion)] {
-        let all = document.manifest.sources.flatMap { source in
-            source.regions.map { (source, $0) }
+        var lookup: [UUID: (source: SourceAsset, region: PhotoRegion)] = [:]
+        for source in document.manifest.sources {
+            for region in source.regions where lookup[region.id] == nil {
+                lookup[region.id] = (source, region)
+            }
         }
-        let lookup = Dictionary(uniqueKeysWithValues: all.map { ($0.1.id, $0) })
         return document.manifest.regionOrder.compactMap { lookup[$0] }
+    }
+
+    func orderedRegions(for sourceID: UUID) -> [PhotoRegion] {
+        orderedRegions.compactMap { item in
+            item.source.id == sourceID ? item.region : nil
+        }
     }
 
     func select(regionID: UUID?) {
@@ -63,46 +74,70 @@ final class ProjectEditingStore {
 
     func importDroppedURLs(_ urls: [URL]) {
         importTask?.cancel()
+        Task {
+            await processingCoordinator.cancel()
+        }
         document.isProcessing = true
         document.activityMessage = "Discovering images…"
         document.processingProgress = 0
 
-        importTask = Task {
-            let discovery = await Task.detached(priority: .userInitiated) {
-                ImageImportService.discoverAndRead(urls: urls)
-            }.value
-            guard !Task.isCancelled else { return }
-
-            document.lastImportReport = discovery.report
-            guard !discovery.images.isEmpty else {
-                document.isProcessing = false
-                document.activityMessage = "No supported images found."
-                return
-            }
-
-            document.activityMessage = "Detecting photographs…"
-            let processed = await processingCoordinator.process(
-                images: discovery.images,
-                startingImportOrder: document.manifest.sources.count,
-                maximumDetections: DetectionPreferences.maximumDetections
-            )
-            guard !Task.isCancelled else { return }
-
-            for (index, item) in processed.enumerated() {
-                document.setImportedData(
-                    item.importedImage.data,
-                    thumbnailData: item.thumbnailData,
-                    source: item.source
-                )
-                document.manifest.regionOrder.append(contentsOf: item.source.regions.map(\.id))
-                document.processingProgress = Double(index + 1) / Double(processed.count)
-                if selectedRegionID == nil, let first = item.source.regions.first {
-                    selectedRegionID = first.id
+        let discoveryTask = Task.detached(priority: .userInitiated) {
+            try ImageImportService.discoverAndStage(urls: urls)
+        }
+        importTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                let discovery = try await withTaskCancellationHandler {
+                    try await discoveryTask.value
+                } onCancel: {
+                    discoveryTask.cancel()
                 }
+                defer {
+                    try? FileManager.default.removeItem(at: discovery.stagingDirectory)
+                }
+                try Task.checkCancellation()
+
+                document.lastImportReport = discovery.report
+                guard !discovery.images.isEmpty else {
+                    document.isProcessing = false
+                    document.activityMessage = "No supported images found."
+                    return
+                }
+
+                document.activityMessage = "Detecting photographs…"
+                let completed = await processingCoordinator.process(
+                    images: discovery.images,
+                    startingImportOrder: nextImportOrder,
+                    maximumDetections: DetectionPreferences.maximumDetections
+                ) { [weak self] item, completed, total in
+                    guard let self else { return }
+                    do {
+                        try document.setImportedFile(
+                            at: item.importedImage.localURL,
+                            thumbnailData: item.thumbnailData,
+                            source: item.source
+                        )
+                        document.processingProgress = Double(completed) / Double(total)
+                        if selectedRegionID == nil, let first = item.source.regions.first {
+                            selectedRegionID = first.id
+                            refreshPreviews()
+                        }
+                    } catch {
+                        document.lastImportReport?.failures.append(
+                            "\(item.source.displayName): \(error.localizedDescription)"
+                        )
+                    }
+                }
+                try Task.checkCancellation()
+
+                document.isProcessing = false
+                document.activityMessage = "Imported \(completed) image\(completed == 1 ? "" : "s")."
+            } catch is CancellationError {
+                return
+            } catch {
+                document.isProcessing = false
+                document.projectError = error.localizedDescription
             }
-            document.isProcessing = false
-            document.activityMessage = "Imported \(processed.count) image\(processed.count == 1 ? "" : "s")."
-            refreshPreviews()
         }
     }
 
@@ -120,7 +155,8 @@ final class ProjectEditingStore {
         registerUndoFrom previous: NormalizedQuadrilateral? = nil,
         undoManager: UndoManager? = nil
     ) {
-        guard var source = selectedSource,
+        guard quadrilateral.isValid(),
+              var source = selectedSource,
               let selectedRegionID,
               let index = source.regions.firstIndex(where: { $0.id == selectedRegionID })
         else {
@@ -147,7 +183,7 @@ final class ProjectEditingStore {
     }
 
     func addRegion(undoManager: UndoManager?) {
-        guard var source = selectedSource ?? document.manifest.sources.first else { return }
+        guard var source = selectedSource else { return }
         let region = PhotoRegion(
             id: UUID(),
             sourceID: source.id,
@@ -157,12 +193,17 @@ final class ProjectEditingStore {
             rotation: .zero,
             flipHorizontal: false,
             flipVertical: false,
-            order: document.manifest.regionOrder.count,
+            order: source.regions.count,
             isManuallyEdited: true
         )
         source.regions.append(region)
         document.updateSource(source)
-        document.manifest.regionOrder.append(region.id)
+        let sourceRegionIDs = Set(source.regions.map(\.id))
+        let insertionIndex = document.manifest.regionOrder.lastIndex(where: sourceRegionIDs.contains)
+            .map { $0 + 1 }
+            ?? document.manifest.regionOrder.count
+        document.manifest.regionOrder.insert(region.id, at: insertionIndex)
+        document.reconcileRegionOrdering()
         selectedRegionID = region.id
         refreshPreviews()
 
@@ -188,6 +229,7 @@ final class ProjectEditingStore {
             ?? document.manifest.regionOrder.count
         document.manifest.regionOrder.removeAll(where: { $0 == id })
         document.updateSource(source)
+        document.reconcileRegionOrdering()
         selectedRegionID = document.manifest.regionOrder.first
         refreshPreviews()
 
@@ -201,6 +243,11 @@ final class ProjectEditingStore {
             )
         }
         undoManager?.setActionName("Delete Region")
+    }
+
+    func removeSelectedSource(undoManager: UndoManager?) {
+        guard let sourceID = selectedSource?.id else { return }
+        removeSource(id: sourceID, undoManager: undoManager)
     }
 
     func rotateClockwise(undoManager: UndoManager?) {
@@ -236,24 +283,51 @@ final class ProjectEditingStore {
     }
 
     func rerunDetection(force: Bool = false, undoManager: UndoManager?) {
-        guard let source = selectedSource, let data = document.originalData(for: source) else { return }
+        let sourceID = force ? (pendingDetectionSourceID ?? selectedSource?.id) : selectedSource?.id
+        guard let sourceID,
+              let source = document.manifest.sources.first(where: { $0.id == sourceID }),
+              let originalURL = document.originalURL(for: source)
+        else {
+            return
+        }
         if !force, source.regions.contains(where: \.isManuallyEdited) {
+            pendingDetectionSourceID = source.id
             confirmationMessage = "Rerunning detection replaces manually edited regions for this source."
             return
         }
-
-        Task {
+        pendingDetectionSourceID = nil
+        confirmationMessage = nil
+        let previous = source.regions
+        let maximumDetections = DetectionPreferences.maximumDetections
+        rerunTask?.cancel()
+        let worker = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
+            let loaded = try ImageLoader.loadUprightImage(
+                url: originalURL,
+                maximumDimension: 2_048
+            )
+            let candidates = try await RectangleDetectionService.detect(
+                in: loaded.image,
+                maximumDetections: maximumDetections
+            )
+            try Task.checkCancellation()
+            return Self.makeRegions(candidates: candidates, sourceID: source.id)
+        }
+        rerunTask = Task { [weak self] in
+            guard let self else { return }
             do {
-                let loaded = try ImageLoader.loadUprightImage(data: data, maximumDimension: 2_048)
-                let candidates = try await RectangleDetectionService.detect(
-                    in: loaded.image,
-                    maximumDetections: DetectionPreferences.maximumDetections
-                )
-                let regions = Self.makeRegions(
-                    candidates: candidates,
-                    sourceID: source.id
-                )
-                let previous = source.regions
+                let regions = try await withTaskCancellationHandler {
+                    try await worker.value
+                } onCancel: {
+                    worker.cancel()
+                }
+                guard let currentSource = document.manifest.sources.first(where: {
+                    $0.id == source.id
+                }), currentSource.regions == previous else {
+                    document.projectError =
+                        "Detection results were not applied because the source changed while detection was running."
+                    return
+                }
                 document.replaceRegions(for: source.id, with: regions)
                 selectedRegionID = regions.first?.id
                 refreshPreviews()
@@ -267,21 +341,65 @@ final class ProjectEditingStore {
                     )
                 }
                 undoManager?.setActionName("Rerun Detection")
+            } catch is CancellationError {
+                return
             } catch {
                 document.projectError = error.localizedDescription
             }
         }
     }
 
-    func moveRegions(from offsets: IndexSet, to destination: Int, undoManager: UndoManager?) {
+    func cancelRerunDetectionConfirmation() {
+        confirmationMessage = nil
+        pendingDetectionSourceID = nil
+    }
+
+    func moveRegions(
+        in sourceID: UUID,
+        from offsets: IndexSet,
+        to destination: Int,
+        undoManager: UndoManager?
+    ) {
         let previous = document.manifest.regionOrder
-        document.manifest.regionOrder.move(fromOffsets: offsets, toOffset: destination)
-        document.manifest.modifiedAt = Date()
-        let next = document.manifest.regionOrder
-        undoManager?.registerUndo(withTarget: self) { target in
-            target.setRegionOrder(previous, inverse: next, undoManager: undoManager)
+        var sourceOrder = orderedRegions(for: sourceID).map(\.id)
+        sourceOrder.move(fromOffsets: offsets, toOffset: destination)
+        let sourceIDs = Set(sourceOrder)
+        var iterator = sourceOrder.makeIterator()
+        let next = previous.map { id in
+            sourceIDs.contains(id) ? (iterator.next() ?? id) : id
         }
+        setRegionOrder(next, inverse: previous, undoManager: undoManager)
         undoManager?.setActionName("Reorder Regions")
+    }
+
+    func moveSources(
+        from offsets: IndexSet,
+        to destination: Int,
+        undoManager: UndoManager?
+    ) {
+        let previousSources = document.manifest.sources
+        let previousRegionOrder = document.manifest.regionOrder
+        var orderedSources = previousSources.sorted { $0.importOrder < $1.importOrder }
+        orderedSources.move(fromOffsets: offsets, toOffset: destination)
+        for index in orderedSources.indices {
+            orderedSources[index].importOrder = index
+        }
+        let positions = regionPositions(previousRegionOrder)
+        let nextRegionOrder = orderedSources.flatMap { source in
+            source.regions
+                .sorted {
+                    positions[$0.id, default: Int.max] < positions[$1.id, default: Int.max]
+                }
+                .map(\.id)
+        }
+        setImageOrdering(
+            sources: orderedSources,
+            regionOrder: nextRegionOrder,
+            inverseSources: previousSources,
+            inverseRegionOrder: previousRegionOrder,
+            undoManager: undoManager
+        )
+        undoManager?.setActionName("Reorder Images")
     }
 
     func sortImagesByFileName(undoManager: UndoManager?) {
@@ -289,7 +407,7 @@ final class ProjectEditingStore {
         let previousRegionOrder = document.manifest.regionOrder
         guard previousSources.count > 1 else { return }
 
-        let sortedSources = previousSources.sorted { lhs, rhs in
+        var sortedSources = previousSources.sorted { lhs, rhs in
             let comparison = lhs.displayName.localizedStandardCompare(rhs.displayName)
             if comparison != .orderedSame {
                 return comparison == .orderedAscending
@@ -299,19 +417,12 @@ final class ProjectEditingStore {
             }
             return lhs.id.uuidString < rhs.id.uuidString
         }
-
-        var updatedSources = previousSources
-        for (importOrder, source) in sortedSources.enumerated() {
-            guard let index = updatedSources.firstIndex(where: { $0.id == source.id }) else {
-                continue
-            }
-            updatedSources[index].importOrder = importOrder
+        for index in sortedSources.indices {
+            sortedSources[index].importOrder = index
         }
 
-        let currentPositions = Dictionary(
-            uniqueKeysWithValues: previousRegionOrder.enumerated().map { ($0.element, $0.offset) }
-        )
-        let sortedRegionOrder = sortedSources.flatMap { source in
+        let currentPositions = regionPositions(previousRegionOrder)
+        let nextRegionOrder = sortedSources.flatMap { source in
             source.regions
                 .sorted {
                     currentPositions[$0.id, default: Int.max]
@@ -319,12 +430,9 @@ final class ProjectEditingStore {
                 }
                 .map(\.id)
         }
-        let sortedRegionIDs = Set(sortedRegionOrder)
-        let nextRegionOrder = sortedRegionOrder
-            + previousRegionOrder.filter { !sortedRegionIDs.contains($0) }
 
         setImageOrdering(
-            sources: updatedSources,
+            sources: sortedSources,
             regionOrder: nextRegionOrder,
             inverseSources: previousSources,
             inverseRegionOrder: previousRegionOrder,
@@ -334,14 +442,14 @@ final class ProjectEditingStore {
     }
 
     func refreshPreviews() {
-        guard let source = selectedSource, let data = document.originalData(for: source) else {
+        guard let source = selectedSource, let url = document.originalURL(for: source) else {
             sourcePreview = nil
             correctedPreview = nil
             return
         }
         do {
             sourcePreview = try ImageLoader.loadUprightImage(
-                data: data,
+                url: url,
                 maximumDimension: 1_600
             ).image
             refreshCorrectedPreview()
@@ -371,110 +479,90 @@ final class ProjectEditingStore {
 
     func export(to directory: URL) {
         exportTask?.cancel()
-        isExporting = true
-        exportProgress = 0
-        exportReport = nil
-        let options = exportOptions
-        let items = orderedRegions.filter { item in
-            options.selectedRegionIDs?.contains(item.region.id) ?? true
-        }
-        let originals = Dictionary(
-            uniqueKeysWithValues: items.compactMap { item in
-                document.originalData(for: item.source).map { (item.source.id, $0) }
+        do {
+            let options = exportOptions
+            let selectedItems = orderedRegions.filter { item in
+                options.selectedRegionIDs?.contains(item.region.id) ?? true
             }
-        )
+            guard !selectedItems.isEmpty else {
+                document.projectError = "Select a region before exporting."
+                return
+            }
+            let snapshot = try document.snapshot(contentType: .scanPhotoProject)
+            let batchItems = selectedItems.compactMap { item -> ExportWorkItem? in
+                guard let originalURL = snapshot.originals[item.source.storedFilename] else {
+                    return nil
+                }
+                return ExportWorkItem(
+                    sourceName: item.source.displayName,
+                    region: item.region,
+                    originalURL: originalURL,
+                    baseName: "\(item.source.displayName)_\(item.region.order + 1)"
+                )
+            }
+            let batch = ExportBatch(items: batchItems, storage: snapshot.storage)
+            isExporting = true
+            exportProgress = 0
+            exportReport = nil
 
-        exportTask = Task {
-            var report = ExportReport()
-            var pdfImages: [(name: String, image: CGImage)] = []
-            let totalSteps = max(1, items.count * max(1, options.formats.count) + (options.includePDF ? 1 : 0))
-            var completedSteps = 0
-
-            for (index, item) in items.enumerated() {
-                if Task.isCancelled { break }
-                autoreleasepool {
-                    guard let data = originals[item.source.id] else {
-                        report.failures.append(
-                            ExportFailure(
-                                item: item.source.displayName,
-                                message: "Original image is missing."
-                            )
-                        )
-                        return
-                    }
-                    do {
-                        let source = try ImageLoader.loadUprightImage(data: data).image
-                        let rendered = try PerspectiveRenderer.render(
-                            source: source,
-                            region: item.region
-                        )
-                        let baseName = "\(item.source.displayName)_\(index + 1)"
-                        for format in options.formats {
-                            if Task.isCancelled { return }
-                            do {
-                                let url = try ImageExportService.export(
-                                    image: rendered,
-                                    format: format,
-                                    quality: options.quality(for: format),
-                                    baseName: baseName,
-                                    destinationDirectory: directory
-                                )
-                                report.exportedURLs.append(url)
-                            } catch {
-                                report.failures.append(
-                                    ExportFailure(
-                                        item: "\(baseName).\(format.fileExtension)",
-                                        message: error.localizedDescription
-                                    )
-                                )
-                            }
-                            completedSteps += 1
-                            exportProgress = Double(completedSteps) / Double(totalSteps)
-                        }
-                        if options.includePDF {
-                            pdfImages.append((baseName, rendered))
-                        }
-                    } catch {
-                        report.failures.append(
-                            ExportFailure(
-                                item: item.source.displayName,
-                                message: error.localizedDescription
-                            )
-                        )
+            let progress = AsyncStream.makeStream(of: Double.self)
+            let worker = Task.detached(priority: .userInitiated) {
+                Self.performExport(
+                    batch: batch,
+                    options: options,
+                    directory: directory,
+                    progress: progress.continuation
+                )
+            }
+            exportTask = Task { [weak self] in
+                guard let self else {
+                    worker.cancel()
+                    progress.continuation.finish()
+                    return
+                }
+                let progressTask = Task { [weak self] in
+                    for await value in progress.stream {
+                        self?.exportProgress = value
                     }
                 }
-            }
-
-            if options.includePDF, !Task.isCancelled {
-                do {
-                    let url = try PDFExportService.export(
-                        images: pdfImages,
-                        quality: options.pdfQuality,
-                        destinationDirectory: directory
-                    )
-                    report.exportedURLs.append(url)
-                } catch {
-                    report.failures.append(
-                        ExportFailure(item: "Combined PDF", message: error.localizedDescription)
-                    )
+                let result = await withTaskCancellationHandler {
+                    await worker.value
+                } onCancel: {
+                    worker.cancel()
                 }
-                completedSteps += 1
-                exportProgress = Double(completedSteps) / Double(totalSteps)
-            }
+                progress.continuation.finish()
+                await progressTask.value
 
-            if Task.isCancelled {
-                document.activityMessage = "Export cancelled."
-            } else {
-                document.activityMessage = "Exported \(report.exportedURLs.count) file\(report.exportedURLs.count == 1 ? "" : "s")."
+                exportReport = result.report
+                if result.cancelled || Task.isCancelled {
+                    document.activityMessage = "Export cancelled."
+                } else {
+                    let count = result.report.exportedURLs.count
+                    document.activityMessage =
+                        "Exported \(count) file\(count == 1 ? "" : "s")."
+                }
+                isExporting = false
             }
-            exportReport = report
+        } catch {
             isExporting = false
+            document.projectError = error.localizedDescription
         }
     }
 
     func cancelExport() {
         exportTask?.cancel()
-        isExporting = false
+    }
+
+    private var nextImportOrder: Int {
+        (document.manifest.sources.map(\.importOrder).max() ?? -1) + 1
+    }
+
+    private func regionPositions(_ order: [UUID]) -> [UUID: Int] {
+        var positions: [UUID: Int] = [:]
+        for (index, id) in order.enumerated() where positions[id] == nil {
+            positions[id] = index
+        }
+        return positions
     }
 
     private func mutateSelectedRegion(
@@ -534,10 +622,41 @@ final class ProjectEditingStore {
             region.id,
             at: min(orderIndex, document.manifest.regionOrder.count)
         )
+        document.reconcileRegionOrdering()
         selectedRegionID = region.id
         refreshPreviews()
         undoManager?.registerUndo(withTarget: self) { target in
             target.deleteRegion(id: region.id, undoManager: undoManager)
+        }
+    }
+
+    private func removeSource(id: UUID, undoManager: UndoManager?) {
+        do {
+            guard let record = try document.removeSource(id: id) else { return }
+            selectedRegionID = document.manifest.regionOrder.first
+            refreshPreviews()
+            undoManager?.registerUndo(withTarget: self) { target in
+                target.restoreSource(record, undoManager: undoManager)
+            }
+            undoManager?.setActionName("Remove Source")
+        } catch {
+            document.projectError = error.localizedDescription
+        }
+    }
+
+    private func restoreSource(
+        _ record: RemovedSourceRecord,
+        undoManager: UndoManager?
+    ) {
+        do {
+            try document.restoreSource(record)
+            selectedRegionID = record.source.regions.first?.id
+            refreshPreviews()
+            undoManager?.registerUndo(withTarget: self) { target in
+                target.removeSource(id: record.source.id, undoManager: undoManager)
+            }
+        } catch {
+            document.projectError = error.localizedDescription
         }
     }
 
@@ -566,6 +685,7 @@ final class ProjectEditingStore {
         undoManager: UndoManager?
     ) {
         document.manifest.regionOrder = order
+        document.reconcileRegionOrdering()
         document.manifest.modifiedAt = Date()
         undoManager?.registerUndo(withTarget: self) { target in
             target.setRegionOrder(inverse, inverse: order, undoManager: undoManager)
@@ -581,6 +701,7 @@ final class ProjectEditingStore {
     ) {
         document.manifest.sources = sources
         document.manifest.regionOrder = regionOrder
+        document.reconcileRegionOrdering()
         document.manifest.modifiedAt = Date()
         undoManager?.registerUndo(withTarget: self) { target in
             target.setImageOrdering(
@@ -593,7 +714,7 @@ final class ProjectEditingStore {
         }
     }
 
-    private static func makeRegions(
+    private nonisolated static func makeRegions(
         candidates: [DetectionCandidate],
         sourceID: UUID
     ) -> [PhotoRegion] {
@@ -615,4 +736,131 @@ final class ProjectEditingStore {
             )
         }
     }
+
+    private nonisolated static func performExport(
+        batch: ExportBatch,
+        options: ExportOptions,
+        directory: URL,
+        progress: AsyncStream<Double>.Continuation
+    ) -> ExportWorkResult {
+        _ = batch.storage
+        var report = ExportReport()
+        let formats = ExportImageFormat.allCases.filter(options.formats.contains)
+        let stepsPerItem = formats.count + (options.includePDF ? 1 : 0)
+        let totalSteps = max(1, batch.items.count * stepsPerItem)
+        var completedSteps = 0
+        let accessed = directory.startAccessingSecurityScopedResource()
+        defer {
+            if accessed {
+                directory.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        for item in batch.items {
+            if Task.isCancelled {
+                return ExportWorkResult(report: report, cancelled: true)
+            }
+            guard !formats.isEmpty else { continue }
+            do {
+                let rendered = try autoreleasepool {
+                    let source = try ImageLoader.loadUprightImage(url: item.originalURL).image
+                    return try PerspectiveRenderer.render(source: source, region: item.region)
+                }
+                for format in formats {
+                    if Task.isCancelled {
+                        return ExportWorkResult(report: report, cancelled: true)
+                    }
+                    do {
+                        let url = try ImageExportService.export(
+                            image: rendered,
+                            format: format,
+                            quality: options.quality(for: format),
+                            baseName: item.baseName,
+                            destinationDirectory: directory
+                        )
+                        report.exportedURLs.append(url)
+                    } catch {
+                        report.failures.append(
+                            ExportFailure(
+                                item: "\(item.baseName).\(format.fileExtension)",
+                                message: error.localizedDescription
+                            )
+                        )
+                    }
+                    completedSteps += 1
+                    progress.yield(Double(completedSteps) / Double(totalSteps))
+                }
+            } catch {
+                for format in formats {
+                    report.failures.append(
+                        ExportFailure(
+                            item: "\(item.baseName).\(format.fileExtension)",
+                            message: error.localizedDescription
+                        )
+                    )
+                    completedSteps += 1
+                    progress.yield(Double(completedSteps) / Double(totalSteps))
+                }
+            }
+        }
+
+        if options.includePDF, !Task.isCancelled {
+            var completedPDFPages = 0
+            do {
+                let url = try PDFExportService.export(
+                    pageCount: batch.items.count,
+                    quality: options.pdfQuality,
+                    destinationDirectory: directory,
+                    imageProvider: { index in
+                        try autoreleasepool {
+                            try Task.checkCancellation()
+                            let item = batch.items[index]
+                            let source = try ImageLoader.loadUprightImage(
+                                url: item.originalURL
+                            ).image
+                            return try PerspectiveRenderer.render(
+                                source: source,
+                                region: item.region
+                            )
+                        }
+                    },
+                    didCompletePage: { pages in
+                        completedSteps += pages - completedPDFPages
+                        completedPDFPages = pages
+                        progress.yield(Double(completedSteps) / Double(totalSteps))
+                    }
+                )
+                report.exportedURLs.append(url)
+            } catch is CancellationError {
+                return ExportWorkResult(report: report, cancelled: true)
+            } catch {
+                completedSteps += batch.items.count - completedPDFPages
+                progress.yield(Double(completedSteps) / Double(totalSteps))
+                report.failures.append(
+                    ExportFailure(item: "Combined PDF", message: error.localizedDescription)
+                )
+            }
+        }
+        return ExportWorkResult(
+            report: report,
+            cancelled: Task.isCancelled
+        )
+    }
+}
+
+private struct ExportWorkItem: Sendable {
+    let sourceName: String
+    let region: PhotoRegion
+    let originalURL: URL
+    let baseName: String
+}
+
+private struct ExportBatch: @unchecked Sendable {
+    let items: [ExportWorkItem]
+    let storage: ProjectFileStorage
+}
+
+private struct ExportWorkResult: Sendable {
+    let report: ExportReport
+    let cancelled: Bool
 }

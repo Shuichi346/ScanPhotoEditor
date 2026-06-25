@@ -9,7 +9,7 @@ struct DetectionCandidate: Sendable {
 
 enum DetectionPreferences {
     static let maximumDetectionsKey = "maximumDetectionsPerImage"
-    static let defaultMaximumDetections = 1
+    static let defaultMaximumDetections = 8
     static let maximumDetectionsRange = 1 ... 32
 
     static func normalizedMaximumDetections(_ value: Int) -> Int {
@@ -78,7 +78,7 @@ enum RectangleDetectionService {
             .sorted { $0.confidence > $1.confidence }
             .reduce(into: [DetectionCandidate]()) { accepted, candidate in
                 let duplicate = accepted.contains {
-                    $0.quadrilateral.boundingBoxIntersectionOverUnion(
+                    $0.quadrilateral.intersectionOverUnion(
                         with: candidate.quadrilateral
                     ) >= 0.80
                 }

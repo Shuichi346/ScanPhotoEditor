@@ -82,8 +82,30 @@ struct NormalizedQuadrilateral: Codable, Hashable, Sendable {
             || Self.segmentsIntersect(topRight, bottomRight, bottomLeft, topLeft)
     }
 
-    func isValid(minimumArea: CGFloat = 0.015) -> Bool {
-        isInBounds && !isSelfIntersecting && area >= minimumArea
+    func isValid(
+        minimumArea: CGFloat = 0.015,
+        minimumEdgeLength: CGFloat = 0.01
+    ) -> Bool {
+        let edgeLengths = zip(points, points.dropFirst() + [topLeft]).map {
+            hypot($1.x - $0.x, $1.y - $0.y)
+        }
+        let crossProducts = zip(points, points.dropFirst() + [topLeft]).enumerated().map {
+            index, edge in
+            let nextPoint = points[(index + 2) % points.count]
+            return Self.cross(edge.0, edge.1, nextPoint)
+        }
+        let hasSemanticOrdering = topLeft.x <= topRight.x
+            && bottomLeft.x <= bottomRight.x
+            && topLeft.y <= bottomLeft.y
+            && topRight.y <= bottomRight.y
+
+        return isInBounds
+            && !isSelfIntersecting
+            && signedArea > 0
+            && area >= minimumArea
+            && edgeLengths.allSatisfy { $0 >= minimumEdgeLength }
+            && crossProducts.allSatisfy { $0 > 0.000_001 }
+            && hasSemanticOrdering
     }
 
     func point(for corner: QuadrilateralCorner) -> NormalizedPoint {
@@ -138,6 +160,14 @@ struct NormalizedQuadrilateral: Codable, Hashable, Sendable {
         return union > 0 ? intersectionArea / union : 0
     }
 
+    func intersectionOverUnion(with other: NormalizedQuadrilateral) -> CGFloat {
+        guard isValid(), other.isValid() else { return 0 }
+        let intersection = Self.clippedPolygon(subject: points, clip: other.points)
+        let intersectionArea = Self.polygonArea(intersection)
+        let union = area + other.area - intersectionArea
+        return union > 0 ? intersectionArea / union : 0
+    }
+
     private var boundingBox: CGRect {
         let xs = points.map(\.x)
         let ys = points.map(\.y)
@@ -155,14 +185,105 @@ struct NormalizedQuadrilateral: Codable, Hashable, Sendable {
         _ secondStart: NormalizedPoint,
         _ secondEnd: NormalizedPoint
     ) -> Bool {
-        func orientation(_ a: NormalizedPoint, _ b: NormalizedPoint, _ c: NormalizedPoint) -> CGFloat {
-            (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y)
+        let first = cross(firstStart, firstEnd, secondStart)
+        let second = cross(firstStart, firstEnd, secondEnd)
+        let third = cross(secondStart, secondEnd, firstStart)
+        let fourth = cross(secondStart, secondEnd, firstEnd)
+        let epsilon: CGFloat = 0.000_001
+
+        if first * second < -epsilon, third * fourth < -epsilon {
+            return true
         }
-        let first = orientation(firstStart, firstEnd, secondStart)
-        let second = orientation(firstStart, firstEnd, secondEnd)
-        let third = orientation(secondStart, secondEnd, firstStart)
-        let fourth = orientation(secondStart, secondEnd, firstEnd)
-        return first * second < 0 && third * fourth < 0
+        return (abs(first) <= epsilon && point(secondStart, liesOn: firstStart, firstEnd))
+            || (abs(second) <= epsilon && point(secondEnd, liesOn: firstStart, firstEnd))
+            || (abs(third) <= epsilon && point(firstStart, liesOn: secondStart, secondEnd))
+            || (abs(fourth) <= epsilon && point(firstEnd, liesOn: secondStart, secondEnd))
+    }
+
+    private static func cross(
+        _ first: NormalizedPoint,
+        _ second: NormalizedPoint,
+        _ third: NormalizedPoint
+    ) -> CGFloat {
+        (second.x - first.x) * (third.y - first.y)
+            - (second.y - first.y) * (third.x - first.x)
+    }
+
+    private static func point(
+        _ point: NormalizedPoint,
+        liesOn start: NormalizedPoint,
+        _ end: NormalizedPoint
+    ) -> Bool {
+        let epsilon: CGFloat = 0.000_001
+        return point.x >= min(start.x, end.x) - epsilon
+            && point.x <= max(start.x, end.x) + epsilon
+            && point.y >= min(start.y, end.y) - epsilon
+            && point.y <= max(start.y, end.y) + epsilon
+    }
+
+    private static func clippedPolygon(
+        subject: [NormalizedPoint],
+        clip: [NormalizedPoint]
+    ) -> [NormalizedPoint] {
+        guard subject.count >= 3, clip.count >= 3 else { return [] }
+        var output = subject
+        let clipEdges = zip(clip, clip.dropFirst() + [clip[0]])
+
+        for edge in clipEdges {
+            let input = output
+            output.removeAll(keepingCapacity: true)
+            guard var previous = input.last else { return [] }
+            var previousInside = cross(edge.0, edge.1, previous) >= -0.000_001
+
+            for current in input {
+                let currentInside = cross(edge.0, edge.1, current) >= -0.000_001
+                if currentInside != previousInside,
+                   let intersection = lineIntersection(
+                       previous,
+                       current,
+                       edge.0,
+                       edge.1
+                   ) {
+                    output.append(intersection)
+                }
+                if currentInside {
+                    output.append(current)
+                }
+                previous = current
+                previousInside = currentInside
+            }
+        }
+        return output
+    }
+
+    private static func lineIntersection(
+        _ firstStart: NormalizedPoint,
+        _ firstEnd: NormalizedPoint,
+        _ secondStart: NormalizedPoint,
+        _ secondEnd: NormalizedPoint
+    ) -> NormalizedPoint? {
+        let firstX = firstStart.x - firstEnd.x
+        let firstY = firstStart.y - firstEnd.y
+        let secondX = secondStart.x - secondEnd.x
+        let secondY = secondStart.y - secondEnd.y
+        let determinant = firstX * secondY - firstY * secondX
+        guard abs(determinant) > 0.000_001 else { return nil }
+
+        let firstCross = firstStart.x * firstEnd.y - firstStart.y * firstEnd.x
+        let secondCross = secondStart.x * secondEnd.y - secondStart.y * secondEnd.x
+        return NormalizedPoint(
+            x: (firstCross * secondX - firstX * secondCross) / determinant,
+            y: (firstCross * secondY - firstY * secondCross) / determinant
+        )
+    }
+
+    private static func polygonArea(_ polygon: [NormalizedPoint]) -> CGFloat {
+        guard polygon.count >= 3 else { return 0 }
+        let closed = polygon + [polygon[0]]
+        return abs(
+            zip(closed, closed.dropFirst()).reduce(CGFloat.zero) {
+                $0 + $1.0.x * $1.1.y - $1.1.x * $1.0.y
+            } / 2
+        )
     }
 }
-

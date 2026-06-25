@@ -23,7 +23,22 @@ enum PDFExportService {
         quality: Double,
         destinationDirectory: URL
     ) throws -> URL {
-        guard !images.isEmpty else { throw PDFExportError.noPages }
+        try export(
+            pageCount: images.count,
+            quality: quality,
+            destinationDirectory: destinationDirectory,
+            imageProvider: { images[$0].image }
+        )
+    }
+
+    static func export(
+        pageCount: Int,
+        quality: Double,
+        destinationDirectory: URL,
+        imageProvider: (_ index: Int) throws -> CGImage,
+        didCompletePage: (_ completedPages: Int) -> Void = { _ in }
+    ) throws -> URL {
+        guard pageCount > 0 else { throw PDFExportError.noPages }
         let outputURL = ImageExportService.conflictSafeURL(
             baseName: "ScanPhotoEditor Export",
             fileExtension: "pdf",
@@ -31,21 +46,37 @@ enum PDFExportService {
         )
         let temporaryURL = outputURL.appendingPathExtension("partial")
         try? FileManager.default.removeItem(at: temporaryURL)
+        var succeeded = false
+        defer {
+            if !succeeded {
+                try? FileManager.default.removeItem(at: temporaryURL)
+            }
+        }
 
         guard let consumer = CGDataConsumer(url: temporaryURL as CFURL) else {
             throw PDFExportError.contextCreationFailed
         }
-        var initialBox = pageBox(for: images[0].image)
+        try Task.checkCancellation()
+        let firstImage = try imageProvider(0)
+        var initialBox = pageBox(for: firstImage)
         guard let context = CGContext(consumer: consumer, mediaBox: &initialBox, nil) else {
             throw PDFExportError.contextCreationFailed
         }
+        var contextClosed = false
+        defer {
+            if !contextClosed {
+                context.closePDF()
+            }
+        }
 
-        for item in images {
+        for index in 0 ..< pageCount {
+            try Task.checkCancellation()
+            let image = index == 0 ? firstImage : try imageProvider(index)
             let compressedImage = try jpegBackedImage(
-                from: item.image,
+                from: image,
                 quality: quality
             )
-            var pageBox = pageBox(for: item.image)
+            var pageBox = pageBox(for: image)
             let pageInfo = [
                 kCGPDFContextMediaBox: NSData(
                     bytes: &pageBox,
@@ -56,9 +87,13 @@ enum PDFExportService {
             context.interpolationQuality = .high
             context.draw(compressedImage, in: pageBox)
             context.endPDFPage()
+            didCompletePage(index + 1)
         }
         context.closePDF()
+        contextClosed = true
+        try Task.checkCancellation()
         try FileManager.default.moveItem(at: temporaryURL, to: outputURL)
+        succeeded = true
         return outputURL
     }
 

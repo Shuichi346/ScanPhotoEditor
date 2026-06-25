@@ -33,7 +33,8 @@ final class ImportAndManifestTests: XCTestCase {
         try Data([0xFF, 0xD8, 0xFF, 0xD9]).write(to: hidden)
         try FileManager.default.createSymbolicLink(at: symlink, withDestinationURL: jpeg)
 
-        let result = ImageImportService.discoverAndRead(urls: [root])
+        let result = try ImageImportService.discoverAndStage(urls: [root])
+        defer { try? FileManager.default.removeItem(at: result.stagingDirectory) }
 
         XCTAssertEqual(
             result.images.map(\.url.lastPathComponent),
@@ -135,7 +136,7 @@ final class ImportAndManifestTests: XCTestCase {
     }
 
     @MainActor
-    func testDocumentStoresImportedOriginalAndThumbnail() {
+    func testDocumentStoresImportedOriginalAndThumbnailOnDisk() throws {
         let document = PhotoProjectDocument()
         let sourceID = UUID()
         let source = SourceAsset(
@@ -151,9 +152,18 @@ final class ImportAndManifestTests: XCTestCase {
             regions: []
         )
 
-        document.setImportedData(Data([1, 2, 3]), thumbnailData: Data([4, 5]), source: source)
+        let stagedURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try Data([1, 2, 3]).write(to: stagedURL)
+        defer { try? FileManager.default.removeItem(at: stagedURL) }
+        try document.setImportedFile(
+            at: stagedURL,
+            thumbnailData: Data([4, 5]),
+            source: source
+        )
 
-        XCTAssertEqual(document.originalData(for: source), Data([1, 2, 3]))
+        let originalURL = try XCTUnwrap(document.originalURL(for: source))
+        XCTAssertEqual(try Data(contentsOf: originalURL), Data([1, 2, 3]))
         XCTAssertEqual(document.thumbnailData(for: sourceID), Data([4, 5]))
         XCTAssertEqual(document.manifest.sources, [source])
     }
@@ -190,9 +200,9 @@ final class ImportAndManifestTests: XCTestCase {
         manifest.modifiedAt = Date(timeIntervalSince1970: 200)
         manifest.sources = [source]
         manifest.regionOrder = source.regions.map(\.id)
-        let snapshot = ProjectSnapshot(
+        let snapshot = try makeSnapshot(
             manifest: manifest,
-            originals: [source.storedFilename: Data([1, 2, 3, 4])],
+            originalBytes: [source.storedFilename: Data([1, 2, 3, 4])],
             thumbnails: ["\(sourceID.uuidString).jpg": Data([5, 6, 7])]
         )
 
@@ -200,7 +210,10 @@ final class ImportAndManifestTests: XCTestCase {
         let decoded = try ProjectPackageCodec.decode(wrapper)
 
         XCTAssertEqual(decoded.manifest, snapshot.manifest)
-        XCTAssertEqual(decoded.originals, snapshot.originals)
+        XCTAssertEqual(
+            try decoded.originals.mapValues { try Data(contentsOf: $0) },
+            [source.storedFilename: Data([1, 2, 3, 4])]
+        )
         XCTAssertEqual(decoded.thumbnails, snapshot.thumbnails)
     }
 
@@ -222,8 +235,19 @@ final class ImportAndManifestTests: XCTestCase {
         manifest.createdAt = Date(timeIntervalSince1970: 100)
         manifest.modifiedAt = Date(timeIntervalSince1970: 200)
         manifest.sources = [source]
-        let wrapper = try ProjectPackageCodec.encode(
-            ProjectSnapshot(manifest: manifest, originals: [:], thumbnails: [:])
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let manifestWrapper = FileWrapper(
+            regularFileWithContents: try encoder.encode(manifest)
+        )
+        manifestWrapper.preferredFilename = "manifest.json"
+        let originalsWrapper = FileWrapper(directoryWithFileWrappers: [:])
+        originalsWrapper.preferredFilename = "Originals"
+        let wrapper = FileWrapper(
+            directoryWithFileWrappers: [
+                "manifest.json": manifestWrapper,
+                "Originals": originalsWrapper,
+            ]
         )
 
         XCTAssertThrowsError(try ProjectPackageCodec.decode(wrapper)) { error in
@@ -231,6 +255,177 @@ final class ImportAndManifestTests: XCTestCase {
                 return XCTFail("Unexpected error: \(error)")
             }
         }
+    }
+
+    func testPackageEncodeRejectsMissingOriginal() throws {
+        let source = makeSource(displayName: "Missing", importOrder: 0, regionCount: 1)
+        var manifest = ProjectManifest.empty()
+        manifest.sources = [source]
+        manifest.regionOrder = source.regions.map(\.id)
+        let storage = ProjectFileStorage()
+        let snapshot = ProjectSnapshot(
+            manifest: manifest,
+            storage: storage,
+            originals: [:],
+            thumbnails: [:]
+        )
+
+        XCTAssertThrowsError(try ProjectPackageCodec.encode(snapshot))
+    }
+
+    func testPackageDecodeRejectsDuplicateRegionOrderEntries() throws {
+        let source = makeSource(displayName: "Duplicate", importOrder: 0, regionCount: 1)
+        var manifest = ProjectManifest.empty()
+        manifest.sources = [source]
+        manifest.regionOrder = [source.regions[0].id, source.regions[0].id]
+        let snapshot = try makeSnapshot(
+            manifest: manifest,
+            originalBytes: [source.storedFilename: Data([1])],
+            thumbnails: [:]
+        )
+
+        XCTAssertThrowsError(try ProjectPackageCodec.encode(snapshot)) { error in
+            guard case ProjectDocumentError.invalidManifest = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+        }
+    }
+
+    func testEncodedFileWrapperRemainsReadableAfterSnapshotRelease() throws {
+        let source = makeSource(displayName: "Source", importOrder: 0, regionCount: 1)
+        var manifest = ProjectManifest.empty()
+        manifest.sources = [source]
+        manifest.regionOrder = source.regions.map(\.id)
+
+        let wrapper = try makeEncodedWrapper(
+            manifest: manifest,
+            originalBytes: [source.storedFilename: Data([1, 2, 3])]
+        )
+        let decoded = try ProjectPackageCodec.decode(wrapper)
+
+        XCTAssertEqual(
+            try Data(contentsOf: XCTUnwrap(decoded.originals[source.storedFilename])),
+            Data([1, 2, 3])
+        )
+    }
+
+    func testDocumentSavesAndReloadsFromBackgroundQueue() async throws {
+        let source = makeSource(displayName: "Background", importOrder: 0, regionCount: 2)
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let stagedURL = root.appendingPathComponent("staged.jpg")
+        let packageURL = root.appendingPathComponent("Background.scanphoto", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try Data([1, 2, 3, 4]).write(to: stagedURL)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let result = try await Task.detached {
+            let document = PhotoProjectDocument()
+            try document.setImportedFile(
+                at: stagedURL,
+                thumbnailData: nil,
+                source: source
+            )
+            let snapshot = try document.snapshot(contentType: .scanPhotoProject)
+            let wrapper = try ProjectPackageCodec.encode(snapshot)
+            try wrapper.write(
+                to: packageURL,
+                options: .atomic,
+                originalContentsURL: nil
+            )
+            let reopenedWrapper = try FileWrapper(
+                url: packageURL,
+                options: [.immediate, .withoutMapping]
+            )
+            let reopened = try ProjectPackageCodec.decode(reopenedWrapper)
+            guard let reopenedOriginalURL = reopened.originals[source.storedFilename] else {
+                throw ProjectDocumentError.missingOriginal(source.storedFilename)
+            }
+            return (
+                reopened.manifest,
+                try Data(contentsOf: reopenedOriginalURL)
+            )
+        }.value
+
+        XCTAssertEqual(result.0.sources.map(\.id), [source.id])
+        XCTAssertEqual(result.0.regionOrder, source.regions.map(\.id))
+        XCTAssertEqual(result.1, Data([1, 2, 3, 4]))
+    }
+
+    @MainActor
+    func testReplacingRegionsPreservesSourcePositionInGlobalOrder() {
+        let document = PhotoProjectDocument()
+        let first = makeSource(displayName: "First", importOrder: 0, regionCount: 1)
+        let middle = makeSource(displayName: "Middle", importOrder: 1, regionCount: 1)
+        let last = makeSource(displayName: "Last", importOrder: 2, regionCount: 1)
+        document.manifest.sources = [first, middle, last]
+        document.manifest.regionOrder = [
+            first.regions[0].id,
+            middle.regions[0].id,
+            last.regions[0].id,
+        ]
+        let replacements = makeSource(
+            displayName: "Replacement",
+            importOrder: 1,
+            regionCount: 2
+        ).regions.map { region in
+            var region = region
+            region.sourceID = middle.id
+            return region
+        }
+
+        document.replaceRegions(for: middle.id, with: replacements)
+
+        XCTAssertEqual(
+            document.manifest.regionOrder,
+            [first.regions[0].id] + replacements.map(\.id) + [last.regions[0].id]
+        )
+        XCTAssertEqual(
+            document.manifest.sources.first(where: { $0.id == middle.id })?.regions.map(\.order),
+            [0, 1]
+        )
+    }
+
+    @MainActor
+    func testOrderedRegionsSupportsMultipleRegionsFromOneSource() {
+        let document = PhotoProjectDocument()
+        let source = makeSource(displayName: "Multi", importOrder: 0, regionCount: 3)
+        document.manifest.sources = [source]
+        document.manifest.regionOrder = source.regions.map(\.id)
+
+        let store = ProjectEditingStore(document: document)
+
+        XCTAssertEqual(store.orderedRegions.map(\.region.id), source.regions.map(\.id))
+    }
+
+    @MainActor
+    func testRemovingAndRestoringSourceMovesOriginalOutOfManifest() throws {
+        let document = PhotoProjectDocument()
+        let source = makeSource(displayName: "Source", importOrder: 0, regionCount: 1)
+        let stagedURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try Data([1, 2, 3]).write(to: stagedURL)
+        defer { try? FileManager.default.removeItem(at: stagedURL) }
+        try document.setImportedFile(
+            at: stagedURL,
+            thumbnailData: Data([4, 5]),
+            source: source
+        )
+
+        let record = try XCTUnwrap(document.removeSource(id: source.id))
+
+        XCTAssertTrue(document.manifest.sources.isEmpty)
+        XCTAssertTrue(document.manifest.regionOrder.isEmpty)
+        XCTAssertNil(document.originalURL(for: source))
+
+        try document.restoreSource(record)
+
+        XCTAssertEqual(document.manifest.sources.map(\.id), [source.id])
+        XCTAssertEqual(document.manifest.regionOrder, source.regions.map(\.id))
+        XCTAssertEqual(
+            try Data(contentsOf: XCTUnwrap(document.originalURL(for: source))),
+            Data([1, 2, 3])
+        )
     }
 
     private func makeSource(
@@ -265,5 +460,36 @@ final class ImportAndManifestTests: XCTestCase {
             processingError: nil,
             regions: regions
         )
+    }
+
+    private func makeSnapshot(
+        manifest: ProjectManifest,
+        originalBytes: [String: Data],
+        thumbnails: [String: Data]
+    ) throws -> ProjectSnapshot {
+        let storage = ProjectFileStorage()
+        try storage.prepare()
+        var originals: [String: URL] = [:]
+        for (filename, data) in originalBytes {
+            originals[filename] = try storage.writeOriginal(data, filename: filename)
+        }
+        return ProjectSnapshot(
+            manifest: manifest,
+            storage: storage,
+            originals: originals,
+            thumbnails: thumbnails
+        )
+    }
+
+    private func makeEncodedWrapper(
+        manifest: ProjectManifest,
+        originalBytes: [String: Data]
+    ) throws -> FileWrapper {
+        let snapshot = try makeSnapshot(
+            manifest: manifest,
+            originalBytes: originalBytes,
+            thumbnails: [:]
+        )
+        return try ProjectPackageCodec.encode(snapshot)
     }
 }
