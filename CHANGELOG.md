@@ -1,6 +1,8 @@
 # Changelog
 
-## Fixed
+## DATE UNKNOWN
+
+### Fixed
 
 - Fixed unstable main-window toolbar layout and kept source sorting available when the inspector or split-view widths change.
 - Fixed crashes when creating, saving, or reopening projects caused by forcing SwiftUI document callbacks onto the main actor.
@@ -11,7 +13,7 @@
 - Fixed source-image scrolling so the full image remains reachable when zoomed above 100%.
 - Fixed crop guidelines and handles not following geometry changes during dragging.
 
-## Added
+### Added
 
 - Added an export completion screen with exported/failed item counts and an “Open in Finder” action.
 - Added manifest/original validation, missing-thumbnail regeneration, source removal, stricter geometry validation, and polygon-IoU deduplication.
@@ -22,7 +24,7 @@
 - Added recursive drag-and-drop import and automatic rectangle detection.
 - Added non-destructive geometry editing and multi-format export.
 
-## Changed
+### Changed
 
 - Centralized the app marketing and build versions in `project.yml` so generated Xcode projects and packaged app metadata remain consistent.
 - Reorganized source, region, and geometry controls into distinct toolbar and inspector groups, removing ambiguous duplicate trash buttons while retaining working menu and command paths for every action.
